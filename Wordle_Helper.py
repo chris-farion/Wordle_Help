@@ -10,7 +10,6 @@ CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 available_chars = [CHARS]*LENGTH
     
 def order_letters_by_duplicates(word):
-    print(word)
     letters = {}
     for i,letter in enumerate(word):
         if letter in letters:
@@ -19,8 +18,32 @@ def order_letters_by_duplicates(word):
             letters[letter] = [i]
 
     sorted_dict = dict(sorted(letters.items(), key=lambda item: len(item[1]), reverse=True))
-    print(sorted_dict)
     return sorted_dict
 
-test = order_letters_by_duplicates("STSST")
+test0 = order_letters_by_duplicates("STSST")
 
+def binary_search(key,list):
+    ret = -1
+    lo = 0
+    hi = len(list)-1
+    while lo != hi-1:
+        ptr = (hi+lo)//2
+        if key == list[ptr]:
+            ret = ptr
+            lo = hi-1
+        elif key < list[ptr]:
+            hi = ptr
+        else:
+            lo = ptr
+    if key == list[lo]:
+        ret = lo
+    elif key == list[hi]:
+        ret = hi
+    else:
+        pass
+    return ret
+        
+
+
+counting = [i for i in range(100)]
+test1 = binary_search(12,counting)
