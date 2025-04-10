@@ -20,7 +20,7 @@ def order_letters_by_duplicates(word):
     sorted_dict = dict(sorted(letters.items(), key=lambda item: len(item[1]), reverse=True))
     return sorted_dict
 
-test0 = order_letters_by_duplicates("STSST")
+print(order_letters_by_duplicates("STSST"))
 
 def binary_search(key,list):
     ret = -1
@@ -43,7 +43,14 @@ def binary_search(key,list):
         pass
     return ret
         
-
-
 counting = [i for i in range(100)]
-test1 = binary_search(12,counting)
+print(binary_search(12,counting))
+
+def isOrderedList(list):
+    isSorted = True
+    list_size = len(list)
+
+
+
+    return isSorted
+print(isOrderedList(counting))
