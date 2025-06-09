@@ -88,12 +88,12 @@ def merge_lists(first_half,second_half):
             return_array.append(second_half[0])
             second_half = second_half[1:]
     if first_half:
-        return_array.extend(first_half[:])
+        return_array.extend(first_half)
     if second_half:
-        return_array.extend(second_half[:])
+        return_array.extend(second_half)
     return return_array
 
-sample_word_list = ["cigar","rebut","sissy","heath","humph","awake","blush","focal","evade","later","alert","rates","stare","adder","dread","steel","sleet"]
+sample_word_list = ["cigar","rebut","sissy","heath","humph","awake","blush","focal","evade","later","bread","alert","rates","stare","adder","dread","steel","sleet"]
 
 print(f"Before: {sample_word_list}")
 final = merge_sort(sample_word_list)
