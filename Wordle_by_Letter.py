@@ -53,21 +53,16 @@ def merge_lists_by_position(first_half,second_half,position):
 
 def find_range(words,letter,position):
     # Assume list already ordered
-    if letter == 'a' or words[0][position]==letter:
-        return_lower = hi = 0
-        return_upper = lo = -1
-        lo1 = 0
-        hi1 = len(words)-1
-    elif letter == 'z' or words[len(words)-1][position]==letter:
-        return_lower = -1
-        return_upper = lo1 = len(words)-1
+    return_lower = return_upper = -1
+    lo = lo1 = 0
+    hi = hi1 = len(words)-1
+
+    if words[0][position]==letter:
+        lo = -1
+        hi = 0
+    if words[len(words)-1][position]==letter:
+        lo1 = len(words)-1
         hi1 = len(words)
-        lo = 0
-        hi = len(words)-1
-    else:
-        return_lower = return_upper = -1
-        lo = lo1 = 0
-        hi = hi1 = len(words)-1
 
     while (lo != hi-1 or lo1 != hi1-1):
         if return_lower < 0 and lo != hi-1:
@@ -250,7 +245,7 @@ def enter():
         return word, indices
 
     duplicates = order_letters_by_duplicates(wordle_word)
-    print(f"duplicates dict:\n{duplicates}")
+    #print(f"duplicates dict:\n{duplicates}")
 
     ref = {}
 
@@ -259,7 +254,7 @@ def enter():
         for ind in duplicates[ltr]:
             if wordle_result[ind] != 'N':
                 ref[ltr] = ref[ltr] + 1
-    print(f"CC:\n{ref}")
+    #print(f"CC:\n{ref}")
     
     guess = {}
     for i,letter in enumerate(wordle_word):
@@ -288,7 +283,7 @@ def enter():
 
 def exe(words,guess,pos):    
     for key,value in guess.items():
-        print(f"Index: {key}, Letter: {value['letter']}, Score: {value['score']}")
+        #print(f"Index: {key}, Letter: {value['letter']}, Score: {value['score']}")
         if value['result'] == 'Y':
             words = yes(words,value['letter'],key,pos)
         elif value['result'] == 'N':
@@ -313,6 +308,7 @@ while cmd_line != "exit":
     if cmd_line != "exit":
         if cmd_line == "reset":
             w = full_list_of_words
+            p = list(range(WORD_LENGTH))
         elif cmd_line == "status":
             w = merge_sort(w)
             print(w)
@@ -326,19 +322,6 @@ while cmd_line != "exit":
 
 def bug_reports():
     '''
-    whiny
-    wrd -churn -nynnw
-    wrd -shiny -nyyyy
-    daisy
-    wrd -liken -nwnnn
-    wrd -audit -wnwwn
-    wrd -daily -yyyny
-    stout
-    wrd -share -ynnnn
-    wrd -split -ynnny
-    wrd -scout -ynyyy
-    wrd -snout -ynyyy
-    wrd -smout -ynyyy
     '''
     print("Comments contain bugs")
     
