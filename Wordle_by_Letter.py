@@ -1,9 +1,26 @@
+import random
+
 N = 0       #Letter does not exist in word
 Y = 1       #Letter in correct location
 W = 2       #Letter in wrong location
 X = 3       #Error
 
 WORD_LENGTH = 5
+
+def load_5_letter_words():
+    file_path = 'Total_Wordle_Word_Bank.txt'
+    words = []
+    with open(file_path, 'r', encoding='utf-8') as file:
+        words = file.readlines()
+    words = [word.strip() for word in words]
+    return words
+
+def split_list(words):
+    word_count = len(words)
+    mid_point = word_count >> 1 # Essentially divide by 2
+    first_half = words[:mid_point]
+    second_half = words[mid_point:]
+    return first_half,second_half
 
 def merge_sort_by_position(words,position):
     Sorted_List = is_list_sorted_by_position(words,position)
@@ -27,6 +44,8 @@ def is_list_sorted_by_position(list_of_words,position):
 
 def merge_lists_by_position(first_half,second_half,position):
     return_array = []
+
+    # While at least one element is in each array...
     while(first_half and second_half):
         if (first_half[0][position] == second_half[0][position]):
             if (first_half[0][0] > second_half[0][0]):
@@ -46,67 +65,13 @@ def merge_lists_by_position(first_half,second_half,position):
             return_array.append(second_half[0])
             second_half = second_half[1:]
     if first_half:
+        #If the first array is still left over, add it to the end
         return_array.extend(first_half)
     if second_half:
+        #If the second array is still left over, add it to the end
         return_array.extend(second_half)
     return return_array
 
-def find_range(words,letter,position):
-    # Assume list already ordered
-    return_lower = return_upper = -1
-    lo = lo1 = 0
-    hi = hi1 = len(words)-1
-
-    if words[0][position]==letter:
-        lo = -1
-        hi = 0
-    if words[len(words)-1][position]==letter:
-        lo1 = len(words)-1
-        hi1 = len(words)
-
-    while (lo != hi-1 or lo1 != hi1-1):
-        if return_lower < 0 and lo != hi-1:
-            ptr  = (lo + hi) >> 1
-            ltr  = words[ptr][position]
-            if ltr < letter:
-                lo = ptr
-            elif ltr > letter:
-                hi = ptr
-            else:
-                hi = ptr
-                
-        if return_upper < 0 and lo1 != hi1-1:
-            ptr1 = (lo1 + hi1) >> 1
-            ltr1 = words[ptr1][position]
-            if ltr1 < letter:
-                lo1 = ptr1
-            elif ltr1 > letter:
-                hi1 = ptr1
-            else:
-                lo1 = ptr1
-
-    return_lower = hi
-    return_upper = lo1+1
-    return return_lower,return_upper
-
-def order_letters_by_duplicates(word):
-    letters = {}
-    for i,letter in enumerate(word):
-        if letter in letters:
-            letters[letter].append(i)
-        else:
-            letters[letter] = [i]
-
-    sorted_dict = dict(sorted(letters.items(), key=lambda item: len(item[1]), reverse=True))
-    return sorted_dict
-
-def load_5_letter_words():
-    file_path = 'Total_Wordle_Word_Bank.txt'
-    words = []
-    with open(file_path, 'r', encoding='utf-8') as file:
-        words = file.readlines()
-    words = [word.strip() for word in words]
-    return words
 #_________________________________
 def merge_sort(words):
     Sorted_List = is_list_sorted(words)
@@ -128,15 +93,9 @@ def is_list_sorted(words):
             break
     return is_Sorted
 
-def split_list(words):
-    word_count = len(words)
-    mid_point = word_count >> 1 # Essentially divide by 2
-    first_half = words[:mid_point]
-    second_half = words[mid_point:]
-    return first_half,second_half
-
 def merge_lists(first_half,second_half):
     return_array = []
+    # While at least one element is in each array...
     while(first_half and second_half):
         if (first_half[0] == second_half[0]):
             return_array.append(first_half[0])
@@ -150,14 +109,67 @@ def merge_lists(first_half,second_half):
             return_array.append(second_half[0])
             second_half = second_half[1:]
     if first_half:
+        #If the first array is still left over, add it to the end
         return_array.extend(first_half)
     if second_half:
+        #If the second array is still left over, add it to the end
         return_array.extend(second_half)
     return return_array
 
 #_________________
+def find_range(words,letter,position):
+    # Assume list already ordered
+    if len(words) == 1:
+        return_lower = 0
+        return_upper = 1
+        return return_lower,return_upper
+    lo = lo1 = 0
+    hi = hi1 = len(words)-1
 
-def wrong(words,letter,position,count):
+    if words[0][position]==letter:
+        hi = 0
+        lo = hi-1
+        
+    if words[len(words)-1][position]==letter:
+        hi1 = len(words)
+        lo1 = hi1-1
+        
+    while (lo != hi-1 or lo1 != hi1-1):
+        if lo != hi-1:
+            ptr  = (lo + hi) >> 1
+            ltr  = words[ptr][position]
+            if ltr < letter:
+                lo = ptr
+            elif ltr > letter:
+                hi = ptr
+            else:
+                hi = ptr
+        if lo1 != hi1-1:
+            ptr1 = (lo1 + hi1) >> 1
+            ltr1 = words[ptr1][position]
+            if ltr1 < letter:
+                lo1 = ptr1
+            elif ltr1 > letter:
+                hi1 = ptr1
+            else:
+                lo1 = ptr1
+
+    return_lower = hi
+    return_upper = hi1
+    return return_lower,return_upper
+
+def order_letters_by_duplicates(word):
+    letters = {}
+    for i,letter in enumerate(word):
+        if letter in letters:
+            letters[letter].append(i)
+        else:
+            letters[letter] = [i]
+
+    sorted_dict = dict(sorted(letters.items(), key=lambda item: len(item[1]), reverse=True))
+    return sorted_dict
+
+def wrong(words,letter,position,count,ct):  
     print(f"{letter.upper()} - Wrong @ {position}")
     word_count = len(words)
     if word_count == 1:
@@ -169,12 +181,21 @@ def wrong(words,letter,position,count):
     else:
         words = words[:first] + words[last:]
     temp = []
+
+    singular = False
+    
+    if count != ct:
+        singular = True
     
     for word in words:
-        if word.count(letter) == count:
+        if word.count(letter) == count and singular:
             temp.append(word)
+        elif word.count(letter) >= count and not singular:
+            temp.append(word)
+        else:
+            pass
     words = temp
-    print(f"{first}:{last} with {len(words)} words remaining")
+    #print(f"{first}:{last} with {len(words)} words remaining")
     return words
     
 
@@ -189,7 +210,7 @@ def yes(words,letter,position,indices):
     words = merge_sort_by_position(words,position)
     first,last = find_range(words,letter, position)
     words = words[first:last]
-    print(f"{first}:{last} with {len(words)} words remaining")
+    #print(f"{first}:{last} with {len(words)} words remaining")
     return words
 
 def no(words,letter,positions, count):
@@ -206,7 +227,7 @@ def no(words,letter,positions, count):
             words = words[:first]
         else:
             words = words[:first] + words[last:]
-        print(f"{first}:{last} with {len(words)} words remaining")
+    #print(f"{first}:{last} with {len(words)} words remaining")
     return words
 
 def enter():
@@ -225,15 +246,21 @@ def enter():
         if components[1] == "help":
             #Create help menu
             pass
-        elif components[1] == "-reset":
+        elif components[1] == "reset":
             return "reset"
-        elif components[1] == "-sts":
+        elif components[1] == "sts":
             return "status"
+        elif components[1] == "rand":
+            return "random"
+        elif components[1] == "play":
+            return "play"
         else:
             return
-            
-                        
-    
+    elif num_of_components > 3:
+        return
+    else:
+        pass
+        
     wordle_keyword = components[0]
     wordle_word = components[1][1:].lower()
     wordle_result = components[2][1:].upper()
@@ -254,7 +281,7 @@ def enter():
         for ind in duplicates[ltr]:
             if wordle_result[ind] != 'N':
                 ref[ltr] = ref[ltr] + 1
-    #print(f"CC:\n{ref}")
+                
     
     guess = {}
     for i,letter in enumerate(wordle_word):
@@ -262,7 +289,8 @@ def enter():
             'letter': letter,
             'result': wordle_result[i],
             'score': 0,
-            'cc': ref[letter]
+            'cc': ref[letter],
+            'ct': len(duplicates[letter])
             }
 
         if guess[i]['result'] == 'Y':
@@ -289,7 +317,7 @@ def exe(words,guess,pos):
         elif value['result'] == 'N':
             words = no(words,value['letter'],pos,value['cc'])
         elif value['result'] == 'W':
-            words = wrong(words,value['letter'],key,value['cc'])
+            words = wrong(words,value['letter'],key,value['cc'],value['ct'])
         else:
             pass
     return words
@@ -314,9 +342,15 @@ while cmd_line != "exit":
             print(w)
         elif cmd_line is None:
             pass
+        elif cmd_line == "random":
+            rando = random.randint(0,len(w))
+            print(f"Random word: {w[rando]}")
+        elif cmd_line == "play":
+            w = full_list_of_words
+            p = list(range(WORD_LENGTH))
+            rando = random.randint(0,len(w))
         else:
             w = exe(w,cmd_line,p)
-
 
 
 
@@ -324,5 +358,3 @@ def bug_reports():
     '''
     '''
     print("Comments contain bugs")
-    
-    
