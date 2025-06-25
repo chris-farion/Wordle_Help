@@ -72,7 +72,6 @@ def merge_lists_by_position(first_half,second_half,position):
         return_array.extend(second_half)
     return return_array
 
-#_________________________________
 def merge_sort(words):
     Sorted_List = is_list_sorted(words)
     if not Sorted_List:
@@ -116,13 +115,13 @@ def merge_lists(first_half,second_half):
         return_array.extend(second_half)
     return return_array
 
-#_________________
 def find_range(words,letter,position):
     # Assume list already ordered
     if len(words) == 1:
         return_lower = 0
         return_upper = 1
         return return_lower,return_upper
+    
     lo = lo1 = 0
     hi = hi1 = len(words)-1
 
@@ -140,16 +139,12 @@ def find_range(words,letter,position):
             ltr  = words[ptr][position]
             if ltr < letter:
                 lo = ptr
-            elif ltr > letter:
-                hi = ptr
             else:
                 hi = ptr
         if lo1 != hi1-1:
             ptr1 = (lo1 + hi1) >> 1
             ltr1 = words[ptr1][position]
-            if ltr1 < letter:
-                lo1 = ptr1
-            elif ltr1 > letter:
+            if ltr1 > letter:
                 hi1 = ptr1
             else:
                 lo1 = ptr1
@@ -169,66 +164,72 @@ def order_letters_by_duplicates(word):
     sorted_dict = dict(sorted(letters.items(), key=lambda item: len(item[1]), reverse=True))
     return sorted_dict
 
-def wrong(words,letter,position,count,ct):  
+def wrong(word_bank, schedule, position, remaining_positions, duplicate_dict):  
+    letter = schedule['letter']
     print(f"{letter.upper()} - Wrong @ {position}")
-    word_count = len(words)
-    if word_count == 1:
-        return words
-    words = merge_sort_by_position(words,position)
-    first,last = find_range(words,letter, position)
-    if last == word_count:
-        words = words[:first]
-    else:
-        words = words[:first] + words[last:]
+    word_count = len(word_bank)
+    word_bank = merge_sort_by_position(word_bank,position)
     temp = []
 
     singular = False
-    
+    count = schedule['char_count']
+    ct = len(duplicate_dict[letter])
+
+    #TODO: fix below so that the duplicates are handled correctly(-adder -wwnww)
     if count != ct:
         singular = True
-    
-    for word in words:
-        if word.count(letter) == count and singular:
+
+    for word in word_bank:
+        if word.count(letter) == count and singular and word[position] != letter:
             temp.append(word)
-        elif word.count(letter) >= count and not singular:
+        elif word.count(letter) >= count and not singular and word[position] != letter:
             temp.append(word)
         else:
             pass
-    words = temp
-    #print(f"{first}:{last} with {len(words)} words remaining")
-    return words
+    word_bank = temp
+    
+    return word_bank
     
 
-def yes(words,letter,position,indices):
+def yes(word_bank, schedule, position, remaining_positions, duplicate_dict):
+    if position not in remaining_positions:
+        return word_bank
+    letter = schedule['letter']
     print(f"{letter.upper()} - Yes @ {position}")
-    word_count = len(words)
-    if word_count == 1:
-        return words
-    if position not in indices:
-        return words
-    indices.remove(position)
-    words = merge_sort_by_position(words,position)
-    first,last = find_range(words,letter, position)
-    words = words[first:last]
-    #print(f"{first}:{last} with {len(words)} words remaining")
-    return words
+    word_count = len(word_bank)
+    duplicate_dict[letter].remove(position)
+    schedule['char_count'] = schedule['char_count'] - 1 
+    remaining_positions.remove(position)
+    word_bank = merge_sort_by_position(word_bank,position)
+    first,last = find_range(word_bank,letter, position)
+    word_bank = word_bank[first:last]
+    return word_bank
 
-def no(words,letter,positions, count):
-    print(f"{letter.upper()} - No @ {positions}")
-    if count > 0:
-        return words
-    for position in positions:
-        word_count = len(words)
-        if word_count == 1:
-            return words
-        words = merge_sort_by_position(words,position)
-        first,last = find_range(words,letter, position)
+def no(word_bank, schedule, position, remaining_positions, duplicate_dict):
+    letter = schedule['letter']
+    word_count = len(word_bank)
+    if word_count == 1:
+        #TODO Somewhat cheating if there are 2-3 options
+        return word_bank
+    
+    if len(duplicate_dict[letter]) > 1:
+        print(f"{letter.upper()} - No @ {position}")
+        word_bank = merge_sort_by_position(word_bank,position)
+        first,last = find_range(word_bank,letter, position)
         if last == word_count:
-            words = words[:first]
+            word_bank = word_bank[:first]
         else:
-            words = words[:first] + words[last:]
-    #print(f"{first}:{last} with {len(words)} words remaining")
-    return words
+            word_bank = word_bank[:first] + word_bank[last:]
+    else:
+        print(f"{letter.upper()} - No @ {remaining_positions}")
+        for position in remaining_positions:
+            word_bank = merge_sort_by_position(word_bank,position)
+            first,last = find_range(word_bank,letter, position)
+            if last == word_count:
+                word_bank = word_bank[:first]
+            else:
+                word_bank = word_bank[:first] + word_bank[last:]
+    return word_bank
 
 def enter():
     cmd = input(">> ")
@@ -259,27 +260,27 @@ def enter():
     elif num_of_components > 3:
         return
     else:
-        pass
-        
+        return components
+
+def scheduler(components):        
     wordle_keyword = components[0]
     wordle_word = components[1][1:].lower()
-    wordle_result = components[2][1:].upper()
+    wordle_result = components[2][1:].lower()
     if wordle_keyword != "wrd":
         print("Error. No wrd command")
-        return word, indices
+        return
     if WORD_LENGTH != len(wordle_word) and len(wordle_word) != len(wordle_result):
         print("Error. Word and result do not match lengths.")
-        return word, indices
+        return
 
     duplicates = order_letters_by_duplicates(wordle_word)
-    #print(f"duplicates dict:\n{duplicates}")
 
     ref = {}
 
     for ltr in duplicates:
         ref[ltr] = 0
         for ind in duplicates[ltr]:
-            if wordle_result[ind] != 'N':
+            if wordle_result[ind] != 'n':
                 ref[ltr] = ref[ltr] + 1
                 
     
@@ -289,15 +290,14 @@ def enter():
             'letter': letter,
             'result': wordle_result[i],
             'score': 0,
-            'cc': ref[letter],
-            'ct': len(duplicates[letter])
+            'char_count': ref[letter]
             }
 
-        if guess[i]['result'] == 'Y':
+        if guess[i]['result'] == 'y':
             guess[i]['score'] = i + 100
-        elif guess[i]['result'] == 'N':
+        elif guess[i]['result'] == 'n':
             guess[i]['score'] = i + 50
-        elif guess[i]['result'] == 'W':
+        elif guess[i]['result'] == 'w':
             guess[i]['score'] = i
         else:
             guess[i]['score'] = -1
@@ -307,17 +307,16 @@ def enter():
 
     schedule = dict(sorted_guess)
     
-    return schedule
+    return schedule, duplicates
 
-def exe(words,guess,pos):    
+def exe(words,guess,pos,duplicate_info):    
     for key,value in guess.items():
-        #print(f"Index: {key}, Letter: {value['letter']}, Score: {value['score']}")
-        if value['result'] == 'Y':
-            words = yes(words,value['letter'],key,pos)
-        elif value['result'] == 'N':
-            words = no(words,value['letter'],pos,value['cc'])
-        elif value['result'] == 'W':
-            words = wrong(words,value['letter'],key,value['cc'],value['ct'])
+        if value['result'] == 'y':
+            words = yes(words,guess[key],key,pos,duplicate_info)
+        elif value['result'] == 'n':
+            words = no(words,guess[key],key,pos,duplicate_info)
+        elif value['result'] == 'w':
+            words = wrong(words,guess[key],key,pos,duplicate_info)
         else:
             pass
     return words
@@ -348,13 +347,30 @@ while cmd_line != "exit":
         elif cmd_line == "play":
             w = full_list_of_words
             p = list(range(WORD_LENGTH))
-            rando = random.randint(0,len(w))
+            rando = random.randint(0,len(w))          
         else:
-            w = exe(w,cmd_line,p)
+            schedule,duplicate_info = scheduler(cmd_line)
+            w = exe(w,schedule,p,duplicate_info)
 
 
 
 def bug_reports():
     '''
+    world
+    wrd -eorls -nyyyn
+
+    briar
+    wrd -ferns -nnwnn
+    wrd -roily -wnynn
+    wrd -chirp -nnywn
+    wrd -triad -nyyyn
+
+    blurt
+    wrd -rangs -wnnnn
+    wrd -tuyer -wwnnw
+    wrd -court -nnyyy
+    
+    
+    https://wordlearchive.com/144
     '''
     print("Comments contain bugs")
