@@ -9,6 +9,9 @@ CMD_PLAY = "play"
 CMD_RESET = "reset"
 KEYWORD = "wrd"
 
+DICT_KEY_INDEX = 0
+DICT_VALUE_INDEX = 1
+
 WORD_LENGTH = 5
 
 def load_5_letter_words():
@@ -17,6 +20,14 @@ def load_5_letter_words():
     with open(file_path, 'r', encoding='utf-8') as file:
         words = file.readlines()
     words = [word.strip() for word in words]
+    return words
+
+def include_range(words,from_index,to_index):
+    words = words[from_index:to_index]
+    return words
+
+def delete_range(words,from_index,to_index):
+    words = words[:from_index] + words[to_index:]
     return words
 
 def split_list(words):
@@ -35,8 +46,17 @@ def merge_sort_by_position(words,position):
         words = merge_lists_by_position(arr0,arr1,position)
     return words
 
+def refactor_merge_sort(words,position=0):
+    Sorted_List = is_list_sorted_by_position(words,position)
+    if not Sorted_List:
+        arr0,arr1 = split_list(words)
+        arr0 = refactor_merge_sort(arr0,position)
+        arr1 = refactor_merge_sort(arr1,position)
+        words = refactor_merge_lists(arr0,arr1,position)
+    return words
+
 def is_list_sorted_by_position(words,position):
-    #print(f"Using this logic to 'jump' 2 words so that the same work is not reloaded")
+    #Using logic to 'jump' 2 words so that the same word is not reloaded
     is_Sorted = True
     word_count = len(words)
     if word_count <= 1:
@@ -71,7 +91,7 @@ def merge_lists_by_position(first_half,second_half,position):
     # While at least one element is in each array...
     while(first_half and second_half):
         if (first_half[0][position] == second_half[0][position]):
-            if (first_half[0][0] > second_half[0][0]):
+            if (first_half[0] > second_half[0]):
                 return_array.append(second_half[0])
                 return_array.append(first_half[0])
                 first_half = first_half[1:]
@@ -81,6 +101,31 @@ def merge_lists_by_position(first_half,second_half,position):
                 return_array.append(second_half[0])
                 first_half = first_half[1:]
                 second_half = second_half[1:]
+        elif (first_half[0][position] < second_half[0][position]):
+            return_array.append(first_half[0])
+            first_half = first_half[1:]
+        else:
+            return_array.append(second_half[0])
+            second_half = second_half[1:]
+    if first_half:
+        #If the first array is still left over, add it to the end
+        return_array.extend(first_half)
+    if second_half:
+        #If the second array is still left over, add it to the end
+        return_array.extend(second_half)
+    return return_array
+
+def refactor_merge_lists(first_half,second_half,position=0):
+    return_array = []
+    # While at least one element is in each array...
+    while(first_half and second_half):
+        if (first_half[0][position] == second_half[0][position]):
+            if (first_half > second_half):
+                return_array.append(second_half[0])
+                second_half = second_half[1:]
+            else:
+                return_array.append(first_half[0])
+                first_half = first_half[1:]
         elif (first_half[0][position] < second_half[0][position]):
             return_array.append(first_half[0])
             first_half = first_half[1:]
@@ -154,10 +199,12 @@ def merge_lists(first_half,second_half):
     return return_array
 
 def find_range(words,letter,position):
-    # Assume list already ordered
-    if len(words) <= 1:
-        return_lower = 0
-        return_upper = 1
+    # Assume list already ordered by position
+    # There are four pointers, 2 for the lower end of the range and two for the high
+    # Each pointer will 'hug' the index that starts and ends with the same letter
+    if len(words) < 1:
+        print(f"No more words!")
+        return_lower = return_upper  = 0
         return return_lower,return_upper
     from_lo = to_lo = 0
     from_hi = to_hi = len(words)-1
@@ -167,56 +214,55 @@ def find_range(words,letter,position):
     if words[len(words)-1][position]==letter:
         to_hi = len(words)
         to_lo = to_hi-1
-    while (from_lo != from_hi-1 or to_lo != to_hi-1):
-        if from_lo != from_hi-1:
+    while (from_hi - from_lo > 1 or to_hi - to_lo > 1):
+        #if from_lo != from_hi-1:
+        if from_hi - from_lo > 1:
             ptr  = (from_lo + from_hi) >> 1
             ltr  = words[ptr][position]
             if ltr < letter:
                 from_lo = ptr
             else:
                 from_hi = ptr
-        if to_lo != to_hi-1:
+        #if to_lo != to_hi-1:
+        if to_hi - to_lo > 1:
             ptr1 = (to_lo + to_hi) >> 1
             ltr1 = words[ptr1][position]
             if ltr1 > letter:
                 to_hi = ptr1
             else:
                 to_lo = ptr1
+    if words[from_hi][position] != letter:
+        from_hi = to_hi
+    if words[to_lo][position] != letter:
+        to_hi = from_hi
     return_lower = from_hi
     return_upper = to_hi
     return return_lower,return_upper
 
-def order_letters_by_duplicates(word):
+def contains_duplicates(word):
+    ret_val = False
     letters = {}
     for i,letter in enumerate(word):
         if letter in letters:
             letters[letter].append(i)
+            ret_val = True
+            break
         else:
             letters[letter] = [i]
-    sorted_dict = dict(sorted(letters.items(), key=lambda item: len(item[1]), reverse=True))
-    return sorted_dict
+    return ret_val
 
-def wrong(word_bank, schedule, position, remaining_positions, duplicate_dict):  
-    letter = schedule['letter']
-    print(f"{letter.upper()} - Wrong @ {position}")
-    word_count = len(word_bank)
-    word_bank = merge_sort_by_position(word_bank,position)
-    temp = []
-    singular = False
-    count = schedule['char_count']
-    ct = len(duplicate_dict[letter])
-    #TODO: fix befrom_low so that the duplicates are handled correctly(-adder -wwnww)
-    if count != ct:
-        singular = True
-    for word in word_bank:
-        if word.count(letter) == count and singular and word[position] != letter:
-            temp.append(word)
-        elif word.count(letter) >= count and not singular and word[position] != letter:
-            temp.append(word)
+def order_letters_by_duplicates(word):
+    letters = {}
+    contains_duplicates = False
+    for i,letter in enumerate(word):
+        if letter in letters:
+            letters[letter].append(i)
+            contains_duplicates = True
         else:
-            pass
-    word_bank = temp
-    return word_bank
+            letters[letter] = [i]
+    sorted_dict = dict(sorted(letters.items(), key=lambda item: len(item[DICT_VALUE_INDEX]), reverse=True))
+    print(sorted_dict)
+    return sorted_dict
 
 def yes(word_bank, schedule, position, remaining_positions, duplicate_dict):
     if position not in remaining_positions:
@@ -229,7 +275,7 @@ def yes(word_bank, schedule, position, remaining_positions, duplicate_dict):
     remaining_positions.remove(position)
     word_bank = merge_sort_by_position(word_bank,position)
     first,last = find_range(word_bank,letter, position)
-    word_bank = word_bank[first:last]
+    word_bank = include_range(word_bank,first,last)
     return word_bank
 
 def no(word_bank, schedule, position, remaining_positions, duplicate_dict):
@@ -256,6 +302,93 @@ def no(word_bank, schedule, position, remaining_positions, duplicate_dict):
             else:
                 word_bank = word_bank[:first] + word_bank[last:]
     return word_bank
+
+def wrong(word_bank, schedule, position, remaining_positions, duplicate_dict):
+    letter = schedule['letter']
+    print(f"{letter.upper()} - Wrong @ {position}")
+    word_count = len(word_bank)
+    word_bank = merge_sort_by_position(word_bank,position)
+    temp = []
+    singular = False
+    count = schedule['char_count']
+    ct = len(duplicate_dict[letter])
+    #TODO: fix befrom_low so that the duplicates are handled correctly(-adder -wwnww)
+    if count != ct:
+        singular = True
+    for word in word_bank:
+        if word.count(letter) == count and singular and word[position] != letter:
+            temp.append(word)
+        elif word.count(letter) >= count and not singular and word[position] != letter:
+            temp.append(word)
+        else:
+            pass
+    word_bank = temp
+    return word_bank
+
+def refactor_wrong(word_bank, schedule, position, remaining_positions, duplicate_dict):
+    letter = schedule['letter']
+    compare_sign = "="
+    if len(duplicate_dict[letter]) >= 2:
+        compare_sign = duplicate_handling(schedule,duplicate_dict)
+    word_count = len(word_bank)
+    print(f"{letter.upper()} - Wrong @ {position}")
+    word_bank = merge_sort_by_position(word_bank,position)
+    first,last = find_range(word_bank,letter, position)
+    word_bank = delete_range(word_bank,first,last)
+    temp = []
+    print(f"Before entering...\nLetter: {letter}: {schedule['char_count']}")
+    if compare_sign == "=":
+        for word in word_bank:
+            if word.count(letter) == schedule['char_count']:
+                #print(f"{word}: {word.count(letter)}")
+                temp.append(word)
+    elif compare_sign == ">=":
+        for word in word_bank:
+            if word.count(letter) >= schedule['char_count']:
+                #print(f"{word}: {word.count(letter)}")
+                temp.append(word)
+    else:
+        pass
+    word_bank = temp
+    #print(f"{letter.upper()} - Wrong @ {position}")
+    return word_bank
+
+def refactor_no(word_bank, schedule, position, remaining_positions, duplicate_dict):
+    letter = schedule['letter']
+    compare_sign = "="
+    if len(duplicate_dict[letter]) >= 2:
+        compare_sign = duplicate_handling(schedule,duplicate_dict)
+    #Condition below should never occur. Here as a safety valve.
+    if compare_sign == ">=":
+        return word_bank
+    word_count = len(word_bank)
+    if schedule['char_count'] == 0:
+        print(f"{letter.upper()} - No @ {remaining_positions}")
+        for position in remaining_positions:
+            word_bank = merge_sort_by_position(word_bank,position)
+            first,last = find_range(word_bank,letter, position)
+            word_bank = delete_range(word_bank,first,last)
+    else:
+        print(f"{letter.upper()} - No @ {position}")
+        word_bank = merge_sort_by_position(word_bank,position)
+        first,last = find_range(word_bank,letter, position)
+        word_bank = delete_range(word_bank,first,last)
+    return word_bank
+
+def duplicate_handling(schedule,duplicate_dict):
+    #>> wrd -adder -wwnww
+    #        {'d': [1, 2], 'a': [0], 'e': [3], 'r': [4]}
+    #Schedule: {'letter': 'd', 'result': 'n', 'score': 52, 'char_count': 1}
+    #Duplicates: {'d': [1, 2], 'a': [0], 'e': [3], 'r': [4]}
+    letter = schedule['letter']
+    duplicates_in_guess = len(duplicate_dict[letter])
+    limit_from_response = schedule['char_count']
+    #print(f"duplicates_in_guess: {duplicates_in_guess}\nlimit_from_response: {limit_from_response}")
+    if duplicates_in_guess != limit_from_response:
+        comparator= "="
+    else:
+        comparator = ">="
+    return comparator
 
 def enter():
     cmd = input(">> ")
@@ -297,13 +430,16 @@ def scheduler(components):
     if WORD_LENGTH != len(wordle_word) and (len(wordle_word) != len(wordle_result)):
         return
     duplicates = order_letters_by_duplicates(wordle_word)
+    #{'d': [1, 2], 'a': [0], 'e': [3], 'r': [4]}
+    print(f"{duplicates['d']}")
     ref = {}
     for ltr in duplicates:
         ref[ltr] = 0
-        for ind in duplicates[ltr]:
-            if wordle_result[ind] != 'n':
+        for index in duplicates[ltr]:
+            if wordle_result[index] != 'n':
                 ref[ltr] = ref[ltr] + 1
     guess = {}
+    #for i,letter in enumerate(wordle_word):
     for i,letter in enumerate(wordle_word):
         guess[i] = {
             'letter': letter,
@@ -328,9 +464,10 @@ def exe(words,guess,pos,duplicate_info):
         if value['result'] == 'y':
             words = yes(words,guess[key],key,pos,duplicate_info)
         elif value['result'] == 'n':
-            words = no(words,guess[key],key,pos,duplicate_info)
+            words = refactor_no(words,guess[key],key,pos,duplicate_info)
+            #words = no(words,guess[key],key,pos,duplicate_info)
         elif value['result'] == 'w':
-            words = wrong(words,guess[key],key,pos,duplicate_info)
+            words = refactor_wrong(words,guess[key],key,pos,duplicate_info)
         else:
             pass
     return words
@@ -371,23 +508,8 @@ while cmd_line != CMD_EXIT:
                 print("Error code ->", e)
                 print("Incorrect input! Please remember to use '-'.")
 
-
-
 def bug_reports():
     '''
-    world
-    wrd -eorls -nyyyn
-
-    briar
-    wrd -ferns -nnwnn
-    wrd -roily -wnynn
-    wrd -chirp -nnywn
-    wrd -triad -nyyyn
-
-    blurt
-    wrd -rangs -wnnnn
-    wrd -tuyer -wwnnw
-    wrd -court -nnyyy
 
     merge
     wrd -stale -nnnny
@@ -396,10 +518,17 @@ def bug_reports():
     wrd -herye -nyyny
     wrd -eerie -nyyny #eerie should not be here after pewee
 
-    exult
-    wrd -meant -nwnny
-    wrd -eruct -ynyny #No words left after this guess
+    skill
+    wrd -depth -nnnnn
+    wrd -fujis -nnnww
+    wrd -slink -ywynw # Incorrectly eliminates skill 
+    wrd -skirl -yyyny 
+    
+    mamma
+    wrd -stale -nnwnn
+    wrd -kaugh -nynnn
+    #No mamma in sts
 
-    https://wordlearchive.com/192
+    https://wordlearchive.com/240
     '''
     print("Comments contain bugs")
