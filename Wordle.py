@@ -267,7 +267,7 @@ def enter():
     elif num_of_components == 3:
         return components
     else:
-        return 
+        return
 
 def scheduler(components):
     wordle_keyword = components[0]
@@ -384,6 +384,53 @@ cmd_line = ""
 #print(f"func0: {func0:.5f}")
 #print(f"func1: {func1:.5f}")
 
+def play(word):
+    print(f"\033[9;93;44m{word}\033[0m")
+    word_dict = {}
+    for index,letter in enumerate(word):
+        if letter not in word_dict:
+            word_dict[letter] = [index]
+        else:
+            word_dict[letter].append(index)
+    guess = ""
+    while guess != CMD_EXIT:
+        guess = input(">> ")
+        guess = guess.strip()
+        components = guess.split(' ')
+        num_of_components = len(components)
+        if guess in CMD_EXIT:
+            return
+        guess_dummy = Wordle_Node()
+        response = guess_dummy
+        response_str = ""
+        for index,letter in enumerate(guess):
+            if letter not in word_dict.keys():
+                response_str = response_str + NO_RESULT
+                response.next = Wordle_Node()
+                response = response.next
+                response.letter = letter
+                response.val = NO_RESULT
+                response.pos = index
+            else:
+                response.next = Wordle_Node()
+                response = response.next
+                if index in word_dict[letter]:
+                    response_str = response_str + YES_RESULT
+                    response.letter = letter
+                    response.val = YES_RESULT
+                    response.pos = index
+                else:
+                    response_str = response_str + WRONG_RESULT
+                    response.letter = letter
+                    response.val = WRONG_RESULT
+                    response.pos = index
+        print(f"\n{guess}\n{response_str}")
+#        while guess_dummy.has_next():
+#            guess_dummy.disp()
+#            guess_dummy = guess_dummy.next
+#        guess_dummy.disp()
+
+
 while cmd_line != CMD_EXIT:
     cmd_line = enter()
     if cmd_line != CMD_EXIT:
@@ -400,6 +447,8 @@ while cmd_line != CMD_EXIT:
         elif cmd_line == CMD_PLAY:
             w = full_list_of_words
             rando = random.randint(0,len(w))
+            print(rando)
+            play(w[rando])
         else:
             try:
                 schedule,duplicates = scheduler(cmd_line)
@@ -411,4 +460,4 @@ def bug_reports():
     '''
     https://wordlearchive.com/252
     '''
-    print("Comments contain bugs")
+    pass
