@@ -405,7 +405,8 @@ def play(word):
         response_str = ""
         for index,letter in enumerate(guess):
             if letter not in word_dict.keys():
-                response_str = response_str + NO_RESULT
+#                response_str += NO_RESULT
+                response_str += f"{letter}"
                 response.next = Wordle_Node()
                 response = response.next
                 response.letter = letter
@@ -415,20 +416,25 @@ def play(word):
                 response.next = Wordle_Node()
                 response = response.next
                 if index in word_dict[letter]:
-                    response_str = response_str + YES_RESULT
+#                    response_str = response_str + YES_RESULT
+                    response_str += f"\033[30;42m{letter}\033[0m"
                     response.letter = letter
                     response.val = YES_RESULT
                     response.pos = index
                 else:
-                    response_str = response_str + WRONG_RESULT
+#                    response_str = response_str + WRONG_RESULT
+                    response_str += f"\033[37;44m{letter}\033[0m"
                     response.letter = letter
                     response.val = WRONG_RESULT
                     response.pos = index
-        print(f"\n{guess}\n{response_str}")
+        print(f"{response_str}")
 #        while guess_dummy.has_next():
 #            guess_dummy.disp()
 #            guess_dummy = guess_dummy.next
 #        guess_dummy.disp()
+
+def command_line_colors(text, style=0, font_color=37, bg_color=40):
+    print(f"\033[{style};{font_color};{bg_color}m{text}\033[0m",end="")
 
 
 while cmd_line != CMD_EXIT:
