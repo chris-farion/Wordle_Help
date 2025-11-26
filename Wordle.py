@@ -40,6 +40,22 @@ class Wordle_Node:
         print(f"{self.letter}={self.val}@{self.pos}")
 
 class Duplicate_Node:
+    def __init__(self, letter=WILDCARD_RESULT):
+        self.letter = letter
+        self.count = 1
+        self.present = 0
+    def disp(self):
+        sign = '>='
+        if self.count != self.present:
+            sign = '='
+        print(f"{self.letter} {sign} {self.present}")
+    def diff(self):
+        difference_between_count_and_presence = False
+        if self.count != self.present:
+            difference_between_count_and_presence = True
+        return difference_between_count_and_presence
+
+class Duplicate_Node1:
     def __init__(self, letter=WILDCARD_RESULT, count=0, present=0):
         self.letter = letter
         self.count = count
@@ -289,11 +305,9 @@ def create_schedule_and_duplicates(node):
     duplicates = {}
     for index,letter in enumerate(node.guess):
         if letter not in duplicates:
-            init_count = 1
-            init_present = 0
+            duplicates[letter] = Duplicate_Node(letter)
             if node.result[index] != NO_RESULT:
-                init_present = 1
-            duplicates[letter] = Duplicate_Node(letter,init_count,init_present)
+                duplicates[letter].present += 1
         else:
             duplicates[letter].count = duplicates[letter].count + 1
             if node.result[index] != NO_RESULT:
@@ -362,10 +376,12 @@ def exe(words,schedule,duplicates):
         schedule = schedule.next
         if schedule.val == YES_RESULT:
             words = yes(words,schedule, duplicates)
-        if schedule.val == NO_RESULT:
+        elif schedule.val == NO_RESULT:
             words = no(words,schedule, duplicates, positions)
-        if schedule.val == WRONG_RESULT:
+        elif schedule.val == WRONG_RESULT:
             words = wrong(words,schedule, duplicates)
+        else:
+            pass
     return words
 
 def remaining_indices(schedule):
@@ -385,6 +401,8 @@ cmd_line = ""
 #print(f"func1: {func1:.5f}")
 
 def play(word):
+    word = "abaca"
+    word = "dread"
     print(f"\033[9;93;44m{word}\033[0m")
     word_dict = {}
     for index,letter in enumerate(word):
@@ -403,31 +421,33 @@ def play(word):
         guess_dummy = Wordle_Node()
         response = guess_dummy
         response_str = ""
+        guess_dict = {}
         for index,letter in enumerate(guess):
-            if letter not in word_dict.keys():
-#                response_str += NO_RESULT
-                response_str += f"{letter}"
-                response.next = Wordle_Node()
-                response = response.next
-                response.letter = letter
-                response.val = NO_RESULT
-                response.pos = index
+            if letter not in guess_dict:
+                guess_dict[letter] = [index]
+            else:
+                guess_dict[letter].append(index)
+        #lkjhsaflkjh
+        result_dict = {}
+        for key in word_dict:
+            if key not in guess_dict.keys():
+                response_str += f"{letter}" #No color scheme as the other letteres do
+            elif key in word_dict.keys():
+                indices_of_key = len(guess_dict[key])
+                indices_of_
+                for value in indices_of_key:
+                    pass
+                response_str += f"\033[30;42m{letter}\033[0m"
             else:
                 response.next = Wordle_Node()
                 response = response.next
-                if index in word_dict[letter]:
-#                    response_str = response_str + YES_RESULT
-                    response_str += f"\033[30;42m{letter}\033[0m"
-                    response.letter = letter
-                    response.val = YES_RESULT
-                    response.pos = index
-                else:
-#                    response_str = response_str + WRONG_RESULT
-                    response_str += f"\033[37;44m{letter}\033[0m"
-                    response.letter = letter
-                    response.val = WRONG_RESULT
-                    response.pos = index
-        print(f"{response_str}")
+                print(f"word: {len(word_dict[letter])} - {guess} :guess")
+    #                response_str = response_str + WRONG_RESULT
+                response_str += f"\033[37;44m{letter}\033[0m"
+                response.letter = letter
+                response.val = WRONG_RESULT
+                response.pos = index
+#        print(f"{response_str}")
 #        while guess_dummy.has_next():
 #            guess_dummy.disp()
 #            guess_dummy = guess_dummy.next
