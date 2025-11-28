@@ -415,8 +415,15 @@ def play(word):
                 result[index].pos = index
                 print(f"X{result[index]}\n\t{result[index].letter}={result[index].val}@{result[index].pos}")
             else:
-                for letter_node in word_dict[letter]:
-                    print(f":{word_dict[letter]}@{word_dict[letter][0]}")
+                if letter not in guess_dict:
+                    guess_dict[letter] = [index]
+                    word_dict[letter][0].next = index
+                    print(f"Start next: {word_dict[letter][0].next}")
+                else:
+                    guess_dict[letter].append(index)
+                    if word_dict[letter][0].pos == index:
+                        word_dict[letter][0].next = index
+
         result_dict = {}
         for key in guess_dict:
             if key not in word_dict.keys():
