@@ -55,22 +55,6 @@ class Duplicate_Node:
             difference_between_count_and_presence = True
         return difference_between_count_and_presence
 
-class Duplicate_Node1:
-    def __init__(self, letter=WILDCARD_RESULT, count=0, present=0):
-        self.letter = letter
-        self.count = count
-        self.present = present
-    def disp(self):
-        sign = '>='
-        if self.count != self.present:
-            sign = '='
-        print(f"{self.letter} {sign} {self.present}")
-    def diff(self):
-        difference_between_count_and_presence = False
-        if self.count != self.present:
-            difference_between_count_and_presence = True
-        return difference_between_count_and_presence
-
 def load_5_letter_words():
     file_path = 'Total_Wordle_Word_Bank.txt'
     words = []
@@ -403,13 +387,17 @@ cmd_line = ""
 def play(word):
     word = "abaca"
     word = "dread"
+    word = "ganja"
     print(f"\033[9;93;44m{word}\033[0m")
+    chars = len(word)
+    result = [Wordle_Node() for i in range(chars)]
     word_dict = {}
     for index,letter in enumerate(word):
+        temp = Wordle_Node(letter,WILDCARD_RESULT,index,None)
         if letter not in word_dict:
-            word_dict[letter] = [index]
+            word_dict[letter] = [temp]
         else:
-            word_dict[letter].append(index)
+            word_dict[letter].append(temp)
     guess = ""
     while guess != CMD_EXIT:
         guess = input(">> ")
@@ -418,24 +406,24 @@ def play(word):
         num_of_components = len(components)
         if guess in CMD_EXIT:
             return
-        guess_dummy = Wordle_Node()
-        response = guess_dummy
         response_str = ""
         guess_dict = {}
         for index,letter in enumerate(guess):
-            if letter not in guess_dict:
-                guess_dict[letter] = [index]
+            if letter not in word_dict:
+                result[index].letter = letter
+                result[index].val = NO_RESULT
+                result[index].pos = index
+                print(f"X{result[index]}\n\t{result[index].letter}={result[index].val}@{result[index].pos}")
             else:
-                guess_dict[letter].append(index)
-        #lkjhsaflkjh
+                for letter_node in word_dict[letter]:
+                    print(f":{word_dict[letter]}@{word_dict[letter][0]}")
         result_dict = {}
-        for key in word_dict:
-            if key not in guess_dict.keys():
+        for key in guess_dict:
+            if key not in word_dict.keys():
                 response_str += f"{letter}" #No color scheme as the other letteres do
             elif key in word_dict.keys():
                 indices_of_key = len(guess_dict[key])
-                indices_of_
-                for value in indices_of_key:
+                for value in range(indices_of_key):
                     pass
                 response_str += f"\033[30;42m{letter}\033[0m"
             else:
