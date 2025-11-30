@@ -78,16 +78,26 @@ def split_list(words):
     second_half = words[mid_point:]
     return first_half,second_half
 
-def merge_sort(words,position=0):
+def merge_sort_position(words,position=0):
     Sorted_List = is_list_sorted_by_position(words,position)
     if not Sorted_List:
         arr0,arr1 = split_list(words)
-        arr0 = merge_sort(arr0,position)
-        arr1 = merge_sort(arr1,position)
+        arr0 = merge_sort_position(arr0,position)
+        arr1 = merge_sort_position(arr1,position)
         words = merge_lists(arr0,arr1,position)
     return words
 
+def merge_sort(words):
+    Sorted_List = is_list_sorted(words)
+    if not Sorted_List:
+        arr0,arr1 = split_list(words)
+        arr0 = merge_sort(arr0)
+        arr1 = merge_sort(arr1)
+        words = merge_lists(arr0,arr1)
+    return words
+
 def is_list_sorted_by_position(words,position=0):
+    #THIS WILL NOT PROPERLY SORT THE LIST. This simply provides bounds to eliminate words.
     #Using logic to 'jump' 2 words so that the same word is not reloaded
     is_Sorted = True
     word_count = len(words)
@@ -103,13 +113,14 @@ def is_list_sorted_by_position(words,position=0):
                 is_Sorted = False
                 break
             letter_A = words[word_index+2][position]
-            compare_A_to_B ^= switch_scenario
+            compare_A_to_B = False
         else:
             if letter_B > letter_A:
                 is_Sorted = False
                 break
             letter_B = words[word_index+2][position]
-            compare_A_to_B ^= switch_scenario
+            compare_A_to_B = True
+    #Last comparison at the list. Avoids out of range errors.
     if compare_A_to_B:
         if letter_A > letter_B:
             is_Sorted = False
@@ -118,22 +129,76 @@ def is_list_sorted_by_position(words,position=0):
             is_Sorted = False
     return is_Sorted
 
+def is_list_sorted(words):
+    #THIS WILL NOT PROPERLY SORT THE LIST. This simply provides bounds to eliminate words.
+    #Using logic to 'jump' 2 words so that the same word is not reloaded
+    is_Sorted = True
+    word_count = len(words)
+    if word_count <= 1:
+        return is_Sorted
+    compare_A_to_B = True
+    switch_scenario = True
+    letter_A = words[0]
+    letter_B = words[1]
+    for word_index in range(((word_count)-2)):
+        if compare_A_to_B:
+            if letter_A > letter_B:
+                is_Sorted = False
+                break
+            letter_A = words[word_index+2]
+            compare_A_to_B = False
+        else:
+            if letter_B > letter_A:
+                is_Sorted = False
+                break
+            letter_B = words[word_index+2]
+            compare_A_to_B = True
+    #Last comparison at the list. Avoids out of range errors.
+    if compare_A_to_B:
+        if letter_A > letter_B:
+            is_Sorted = False
+    else:
+        if letter_B > letter_A:
+            is_Sorted = False
+    return is_Sorted
+
+def merge_lists_by_position(first_half,second_half,position=0):
+    return_array = []
+    # While at least one element is in each array...
+    while(first_half and second_half):
+        if (first_half[0][position] < second_half[0][position]):
+            return_array.append(first_half[0])
+            first_half = first_half[1:]
+        elif (first_half[0][position] > second_half[0][position]):
+            return_array.append(second_half[0])
+            second_half = second_half[1:]
+        else:
+            return_array.append(first_half[0])
+            return_array.append(second_half[0])
+            first_half = first_half[1:]
+            second_half = second_half[1:]
+    if first_half:
+        #If the first array is still left over, add it to the end
+        return_array.extend(first_half)
+    if second_half:
+        #If the second array is still left over, add it to the end
+        return_array.extend(second_half)
+    return return_array
+
 def merge_lists(first_half,second_half,position=0):
     return_array = []
     # While at least one element is in each array...
     while(first_half and second_half):
-        if (first_half[0][position] == second_half[0][position]):
-            if (first_half > second_half):
-                return_array.append(second_half[0])
-                second_half = second_half[1:]
-            else:
-                return_array.append(first_half[0])
-                first_half = first_half[1:]
-        elif (first_half[0][position] < second_half[0][position]):
+        if (first_half[0] < second_half[0]):
             return_array.append(first_half[0])
             first_half = first_half[1:]
-        else:
+        elif (first_half[0] > second_half[0]):
             return_array.append(second_half[0])
+            second_half = second_half[1:]
+        else:
+            return_array.append(first_half[0])
+            return_array.append(second_half[0])
+            first_half = first_half[1:]
             second_half = second_half[1:]
     if first_half:
         #If the first array is still left over, add it to the end
@@ -187,10 +252,10 @@ def find_range(words,letter,position):
 def yes(word_bank, schedule, duplicate_dict):
     letter = schedule.letter
     position = schedule.pos
-    word_bank = merge_sort(word_bank,position) 
+    word_bank = merge_sort_position(word_bank,position) 
     first,last = find_range(word_bank, letter, position)
-    print(f"{letter.upper()} - [{first}:{last}) @ {position+1}")
     word_bank = include_range(word_bank,first,last)
+    print(f"{letter.upper()} - [{first}:{last}) @ {position}")
     return word_bank
 
 def no(word_bank, schedule, duplicate_dict, positions):
@@ -202,10 +267,10 @@ def no(word_bank, schedule, duplicate_dict, positions):
         if duplicate_with_wrong:
             remaining_positions = [schedule.pos]
     for position in remaining_positions:
-        word_bank = merge_sort(word_bank,position)
+        word_bank = merge_sort_position(word_bank,position)
         first,last = find_range(word_bank,letter, position)
-        print(f"{letter.upper()} - [:{first})[{last}:) @ {position+1}")
         word_bank = exclude_range(word_bank,first,last)
+        print(f"{letter.upper()} - [:{first})[{last}:) @ {position}")
     return word_bank
 
 def wrong_exception(node):
@@ -220,9 +285,9 @@ def wrong(word_bank, schedule, duplicate_dict):
     letter = schedule.letter
     position = schedule.pos
     word_count = len(word_bank)
-    word_bank = merge_sort(word_bank,position)
+    word_bank = merge_sort_position(word_bank,position)
     first,last = find_range(word_bank,letter, position)
-    print(f"{letter.upper()} - [:{first})[{last}:) @ {position+1}")
+    print(f"{letter.upper()} - [:{first})[{last}:) @ {position}")
     word_bank = exclude_range(word_bank,first,last)
     temp = []
     duplicate_catch = duplicate_dict[letter].diff()
@@ -379,10 +444,6 @@ def remaining_indices(schedule):
 full_list_of_words = load_5_letter_words()
 w = full_list_of_words
 cmd_line = ""
-
-#func1 = timeit.timeit(lambda: is_list_sorted_by_position(w,0), number=10000)
-#print(f"func0: {func0:.5f}")
-#print(f"func1: {func1:.5f}")
 
 def play(word):
     word = "abaca"
