@@ -130,8 +130,6 @@ def is_list_sorted_by_position(words,position=0):
     return is_Sorted
 
 def is_list_sorted(words):
-    #THIS WILL NOT PROPERLY SORT THE LIST. This simply provides bounds to eliminate words.
-    #Using logic to 'jump' 2 words so that the same word is not reloaded
     is_Sorted = True
     word_count = len(words)
     if word_count <= 1:
@@ -441,69 +439,8 @@ def remaining_indices(schedule):
             non_yes_indices.append(schedule.pos)
     return non_yes_indices
 
-full_list_of_words = load_5_letter_words()
-w = full_list_of_words
-cmd_line = ""
-
-def play1(answer, guess):
-    answer = "ganja"
-    guess = "aargh"
-    #guess = "babka"
-    result = "....."
-    #initialize to all NO. YES or WRONG will correct it.
-    result = "nnnnn"
-    ans = {}
-    gss = {}
-    res = {}
-    for iA,cA in enumerate(answer):
-        if cA not in ans:
-            ans[cA] = [iA]
-        else:
-            ans[cA].append(iA)
-    for iG,cG in enumerate(guess):
-        if cG not in gss:
-            gss[cG] = [iG]
-        else:
-            gss[cG].append(iG)
-    for iR,cR in enumerate(result):
-        if iR not in res:
-            res[iR] = [cR]
-        else:
-            res[iR].append(cR)
-    print(f"Initial Conditions\n{ans}\n{gss}\n{res}")
-    for kG in gss.keys():
-        print(f"kG={kG}")
-        if kG not in ans:
-            for i in gss[kG]:
-                print(f"No={i}")
-                res[i] = [NO_RESULT]
-        else:
-            #pass 1
-            for i in gss[kG]:
-                print(f"i={i}")
-                if i in ans[kG]:
-                    res[i] = [YES_RESULT]
-            print(f"Done with First Pass")
-            #Remove yes
-            for j in gss[kG]:
-                print(f"j: {j} - {ans[kG]}|{gss[kG]}")
-                if res[j] == [YES_RESULT]:
-                    ans[kG].remove(j)
-                    gss[kG].remove(j)
-            print(f"Removed Indicies\n{ans}\n{gss}\n{res}")
-            #pass 2
-            print(f"Lens\n{len(ans[kG])}\n{len(gss[kG])}\nRes={min(len(ans[kG]),len(gss[kG]))}")
-            iter2take = min(len(ans[kG]),len(gss[kG]))
-            for i in range(iter2take):
-                print(f"We in here {i}")
-                print(f"Ans: {ans[kG][i]}\nGuess: {gss[kG][i]}")
-                res[gss[kG][i]] = [WRONG_RESULT]
-    print(f"Final Result\n{ans}\n{gss}\n{res}")
-
-
 
 def play(word):
-    print(word)
     word_dict = {}
     for index,letter in enumerate(word):
         if letter not in word_dict:
@@ -559,9 +496,9 @@ def play(word):
                 response_str += f"{result[current_letter].letter}"
         print(f"{response_str}")
 
-def command_line_colors(text, style=0, font_color=37, bg_color=40):
-    print(f"\033[{style};{font_color};{bg_color}m{text}\033[0m",end="")
-
+full_list_of_words = load_5_letter_words()
+w = full_list_of_words
+cmd_line = ""
 
 while cmd_line != CMD_EXIT:
     cmd_line = enter()
@@ -587,8 +524,5 @@ while cmd_line != CMD_EXIT:
             except TypeError as e:
                 print("Error code ->", e)
 
-def bug_reports():
-    '''
-    https://wordlearchive.com/252
-    '''
+if __name__ == '__main__':
     pass
