@@ -84,7 +84,7 @@ def merge_sort_position(words,position=0):
         arr0,arr1 = split_list(words)
         arr0 = merge_sort_position(arr0,position)
         arr1 = merge_sort_position(arr1,position)
-        words = merge_lists(arr0,arr1,position)
+        words = merge_lists_by_position(arr0,arr1,position)
     return words
 
 def merge_sort(words):
@@ -162,14 +162,14 @@ def is_list_sorted(words):
             is_Sorted = False
     return is_Sorted
 
-def merge_lists_by_position(first_half,second_half,position=0):
+def merge_lists(first_half,second_half):
     return_array = []
     # While at least one element is in each array...
     while(first_half and second_half):
-        if (first_half[0][position] < second_half[0][position]):
+        if (first_half[0] < second_half[0]):
             return_array.append(first_half[0])
             first_half = first_half[1:]
-        elif (first_half[0][position] > second_half[0][position]):
+        elif (first_half[0] > second_half[0]):
             return_array.append(second_half[0])
             second_half = second_half[1:]
         else:
@@ -185,14 +185,14 @@ def merge_lists_by_position(first_half,second_half,position=0):
         return_array.extend(second_half)
     return return_array
 
-def merge_lists(first_half,second_half,position=0):
+def merge_lists_by_position(first_half,second_half,position=0):
     return_array = []
     # While at least one element is in each array...
     while(first_half and second_half):
-        if (first_half[0] < second_half[0]):
+        if (first_half[0][position] < second_half[0][position]):
             return_array.append(first_half[0])
             first_half = first_half[1:]
-        elif (first_half[0] > second_half[0]):
+        elif (first_half[0][position] > second_half[0][position]):
             return_array.append(second_half[0])
             second_half = second_half[1:]
         else:
@@ -255,7 +255,7 @@ def yes(word_bank, schedule, duplicate_dict):
     word_bank = merge_sort_position(word_bank,position) 
     first,last = find_range(word_bank, letter, position)
     word_bank = include_range(word_bank,first,last)
-    print(f"{letter.upper()} - [{first}:{last}) @ {position}")
+    print(f"{letter.upper()} - [{first}:{last}) @ {position+1}")
     return word_bank
 
 def no(word_bank, schedule, duplicate_dict, positions):
@@ -270,7 +270,7 @@ def no(word_bank, schedule, duplicate_dict, positions):
         word_bank = merge_sort_position(word_bank,position)
         first,last = find_range(word_bank,letter, position)
         word_bank = exclude_range(word_bank,first,last)
-        print(f"{letter.upper()} - [:{first})[{last}:) @ {position}")
+        print(f"{letter.upper()} - [:{first})[{last}:) @ {position+1}")
     return word_bank
 
 def wrong_exception(node):
@@ -287,7 +287,7 @@ def wrong(word_bank, schedule, duplicate_dict):
     word_count = len(word_bank)
     word_bank = merge_sort_position(word_bank,position)
     first,last = find_range(word_bank,letter, position)
-    print(f"{letter.upper()} - [:{first})[{last}:) @ {position}")
+    print(f"{letter.upper()} - [:{first})[{last}:) @ {position+1}")
     word_bank = exclude_range(word_bank,first,last)
     temp = []
     duplicate_catch = duplicate_dict[letter].diff()
@@ -445,20 +445,71 @@ full_list_of_words = load_5_letter_words()
 w = full_list_of_words
 cmd_line = ""
 
+def play1(answer, guess):
+    answer = "ganja"
+    guess = "aargh"
+    #guess = "babka"
+    result = "....."
+    #initialize to all NO. YES or WRONG will correct it.
+    result = "nnnnn"
+    ans = {}
+    gss = {}
+    res = {}
+    for iA,cA in enumerate(answer):
+        if cA not in ans:
+            ans[cA] = [iA]
+        else:
+            ans[cA].append(iA)
+    for iG,cG in enumerate(guess):
+        if cG not in gss:
+            gss[cG] = [iG]
+        else:
+            gss[cG].append(iG)
+    for iR,cR in enumerate(result):
+        if iR not in res:
+            res[iR] = [cR]
+        else:
+            res[iR].append(cR)
+    print(f"Initial Conditions\n{ans}\n{gss}\n{res}")
+    for kG in gss.keys():
+        print(f"kG={kG}")
+        if kG not in ans:
+            for i in gss[kG]:
+                print(f"No={i}")
+                res[i] = [NO_RESULT]
+        else:
+            #pass 1
+            for i in gss[kG]:
+                print(f"i={i}")
+                if i in ans[kG]:
+                    res[i] = [YES_RESULT]
+            print(f"Done with First Pass")
+            #Remove yes
+            for j in gss[kG]:
+                print(f"j: {j} - {ans[kG]}|{gss[kG]}")
+                if res[j] == [YES_RESULT]:
+                    ans[kG].remove(j)
+                    gss[kG].remove(j)
+            print(f"Removed Indicies\n{ans}\n{gss}\n{res}")
+            #pass 2
+            print(f"Lens\n{len(ans[kG])}\n{len(gss[kG])}\nRes={min(len(ans[kG]),len(gss[kG]))}")
+            iter2take = min(len(ans[kG]),len(gss[kG]))
+            for i in range(iter2take):
+                print(f"We in here {i}")
+                print(f"Ans: {ans[kG][i]}\nGuess: {gss[kG][i]}")
+                res[gss[kG][i]] = [WRONG_RESULT]
+    print(f"Final Result\n{ans}\n{gss}\n{res}")
+
+
+
 def play(word):
-    word = "abaca"
-    word = "dread"
-    word = "ganja"
-    print(f"\033[9;93;44m{word}\033[0m")
-    chars = len(word)
-    result = [Wordle_Node() for i in range(chars)]
+    print(word)
     word_dict = {}
     for index,letter in enumerate(word):
-        temp = Wordle_Node(letter,WILDCARD_RESULT,index,None)
         if letter not in word_dict:
-            word_dict[letter] = [temp]
+            word_dict[letter] = [index]
         else:
-            word_dict[letter].append(temp)
+            word_dict[letter].append(index)
     guess = ""
     while guess != CMD_EXIT:
         guess = input(">> ")
@@ -467,47 +518,46 @@ def play(word):
         num_of_components = len(components)
         if guess in CMD_EXIT:
             return
-        response_str = ""
         guess_dict = {}
+        result = []
         for index,letter in enumerate(guess):
-            if letter not in word_dict:
-                result[index].letter = letter
-                result[index].val = NO_RESULT
-                result[index].pos = index
-                print(f"X{result[index]}\n\t{result[index].letter}={result[index].val}@{result[index].pos}")
+            temp = Wordle_Node(letter,NO_RESULT,index,None)
+            result.append(temp)
+            if letter not in guess_dict:
+                guess_dict[letter] = [index]
             else:
-                if letter not in guess_dict:
-                    guess_dict[letter] = [index]
-                    word_dict[letter][0].next = index
-                    print(f"Start next: {word_dict[letter][0].next}")
-                else:
-                    guess_dict[letter].append(index)
-                    if word_dict[letter][0].pos == index:
-                        word_dict[letter][0].next = index
-
-        result_dict = {}
-        for key in guess_dict:
-            if key not in word_dict.keys():
-                response_str += f"{letter}" #No color scheme as the other letteres do
-            elif key in word_dict.keys():
-                indices_of_key = len(guess_dict[key])
-                for value in range(indices_of_key):
-                    pass
-                response_str += f"\033[30;42m{letter}\033[0m"
+                guess_dict[letter].append(index)
+        #Start processing
+        for guess_key in guess_dict.keys():
+            if guess_key in word_dict:
+                #Pass 1
+                num_of_letter_correct = 0
+                for guess_key_val in guess_dict[guess_key]:
+                    if guess_key_val in word_dict[guess_key]:
+                        num_of_letter_correct += 1
+                        result[guess_key_val].val = YES_RESULT
+                #Pass 2
+                word_iters = len(word_dict[guess_key])-num_of_letter_correct
+                guess_iters = len(guess_dict[guess_key])-num_of_letter_correct
+                iters = min(word_iters,guess_iters)
+                current_index = 0
+                while iters !=0:
+                    guess_index = guess_dict[guess_key][current_index]
+                    index_result = result[guess_index].val
+                    if index_result is not YES_RESULT:
+                        result[guess_index].val = WRONG_RESULT
+                        iters -= 1
+                        current_index += 1
+        #Display result
+        response_str = ""
+        for current_letter in range(len(result)):
+            if result[current_letter].val is YES_RESULT:
+                response_str += f"\033[30;42m{result[current_letter].letter}\033[0m"
+            elif result[current_letter].val is WRONG_RESULT:
+                response_str += f"\033[37;44m{result[current_letter].letter}\033[0m"
             else:
-                response.next = Wordle_Node()
-                response = response.next
-                print(f"word: {len(word_dict[letter])} - {guess} :guess")
-    #                response_str = response_str + WRONG_RESULT
-                response_str += f"\033[37;44m{letter}\033[0m"
-                response.letter = letter
-                response.val = WRONG_RESULT
-                response.pos = index
-#        print(f"{response_str}")
-#        while guess_dummy.has_next():
-#            guess_dummy.disp()
-#            guess_dummy = guess_dummy.next
-#        guess_dummy.disp()
+                response_str += f"{result[current_letter].letter}"
+        print(f"{response_str}")
 
 def command_line_colors(text, style=0, font_color=37, bg_color=40):
     print(f"\033[{style};{font_color};{bg_color}m{text}\033[0m",end="")
@@ -529,7 +579,6 @@ while cmd_line != CMD_EXIT:
         elif cmd_line == CMD_PLAY:
             w = full_list_of_words
             rando = random.randint(0,len(w))
-            print(rando)
             play(w[rando])
         else:
             try:
