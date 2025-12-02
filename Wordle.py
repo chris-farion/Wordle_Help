@@ -10,9 +10,6 @@ CMD_PLAY = "play"
 CMD_RESET = "reset"
 KEYWORD = "wrd"
 
-DICT_KEY_INDEX = 0
-DICT_VALUE_INDEX = 1
-
 NO_RESULT = 'n'
 WILDCARD_RESULT = '.'
 WRONG_RESULT = 'w'
@@ -381,13 +378,6 @@ def create_schedule_and_duplicates(node):
         else:
             pass
     start_node = link_nodes_for_schedule(yes_dummy,no_dummy,wrong_dummy,yCurrent,nCurrent,wCurrent)
-    test_full_path = False
-    if test_full_path:
-        print("Testing the full path")
-        while start_node.has_next():
-            start_node.disp()
-            start_node = start_node.next
-        start_node.disp()
     return start_node, duplicates
 
 def link_nodes_for_schedule(yes_dummy,no_dummy,wrong_dummy,yCurrent,nCurrent,wCurrent):
