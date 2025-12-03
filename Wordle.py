@@ -1,7 +1,4 @@
-import logging
 import random
-import time
-import timeit
 
 CMD_EXIT = ["we","exit"]
 CMD_RANDOM = ["rand","random"]
@@ -9,6 +6,7 @@ CMD_STATUS = ["sts","status"]
 CMD_PLAY = "play"
 CMD_RESET = "reset"
 KEYWORD = "wrd"
+CMD_SUGGEST = "?"
 
 NO_RESULT = 'n'
 WILDCARD_RESULT = '.'
@@ -316,6 +314,8 @@ def enter():
             pass
         elif components[1] in CMD_RESET:
             return CMD_RESET
+        elif components[1] in CMD_SUGGEST:
+            return CMD_SUGGEST
         elif components[1] in CMD_STATUS:
             return CMD_STATUS
         elif components[1] in CMD_RANDOM:
@@ -428,3 +428,21 @@ def remaining_indices(schedule):
         if schedule.val != YES_RESULT:
             non_yes_indices.append(schedule.pos)
     return non_yes_indices
+
+def collect_remaining_letters(words):
+    alphabet_string = "abcdefghijklmnopqrstuvwxyz"
+    alphabet = {}
+    for letter in alphabet_string:
+        alphabet[letter] = 0
+    for word in words:
+        for letter in word:
+            alphabet[letter] += 1
+    alpha_len = len(alphabet)
+    letter_index = 0
+    while letter_index < alpha_len:
+        if alphabet[alphabet_string[letter_index]] >= len(words):
+            alphabet[alphabet_string[letter_index]] -= len(words)
+        if alphabet[alphabet_string[letter_index]] == 0:
+            del alphabet[alphabet_string[letter_index]]
+        letter_index += 1
+    return alphabet

@@ -1,9 +1,5 @@
 from Wordle import *
 
-full_list_of_words = load_5_letter_words()
-w = full_list_of_words
-cmd_line = ""
-
 def play(word):
     word_dict = {}
     for index,letter in enumerate(word):
@@ -60,6 +56,9 @@ def play(word):
                 response_str += f"{result[current_letter].letter}"
         print(f"{response_str}")
 
+full_list_of_words = load_5_letter_words()
+w = full_list_of_words
+cmd_line = ""
 while cmd_line != CMD_EXIT:
     cmd_line = enter()
     if cmd_line != CMD_EXIT:
@@ -77,6 +76,9 @@ while cmd_line != CMD_EXIT:
             w = full_list_of_words
             rando = random.randint(0,len(w))
             play(w[rando])
+        elif cmd_line == CMD_SUGGEST:
+            suggestions = collect_remaining_letters(w)
+            print(suggestions)
         else:
             try:
                 schedule,duplicates = scheduler(cmd_line)
