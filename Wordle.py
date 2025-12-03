@@ -431,6 +431,7 @@ def remaining_indices(schedule):
 
 def collect_remaining_letters(words):
     alphabet_string = "abcdefghijklmnopqrstuvwxyz"
+    dictionary = load_5_letter_words()
     alphabet = {}
     for letter in alphabet_string:
         alphabet[letter] = 0
@@ -445,4 +446,33 @@ def collect_remaining_letters(words):
         if alphabet[alphabet_string[letter_index]] == 0:
             del alphabet[alphabet_string[letter_index]]
         letter_index += 1
-    return alphabet
+    ranking = {}
+    for i in range(5,0,-1):
+        ranking[i] = []
+    for word in dictionary:
+        score = 0
+        wrd = {}
+        for letter in word:
+            if letter not in wrd:
+                wrd[letter] = [letter]
+                if letter in alphabet:
+                    score += 1
+        if score != 0:
+            ranking[score].append(word)
+    current_score = 4
+    while ranking[current_score] is []:
+        current_score -= 1
+    ranking = ranking[current_score]
+    return ranking
+
+'''
+Suggestions bug
+audio nnwwn
+dirty wynnn
+field nywny
+hiked nynyy
+swamp nnnnn
+viced nynyy
+jibed nynyy
+nixed yyyyy
+'''
