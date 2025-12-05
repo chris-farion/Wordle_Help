@@ -1,11 +1,9 @@
-##Wordle_Help
+## Wordle_Help
 
-This is a simple project to eliminate 5 letter words from Wordle guesses.
+### Commands
+ Outside of exiting, start each command with  
+ > **wrd**
 
-You can also play with a random word selected from a list.
-
-###Commands
- Outside of exiting, start each command with **wrd**
  You are given one word bank to work from. Each guess you enter eliminates options from this bank to reveal the available answers.
 
  * Enter Wordle Guess
@@ -17,21 +15,21 @@ You can also play with a random word selected from a list.
   Example:
 > wrd -agony -ywyyn
 
- * Status
+ * Status  
   Use **sts** or **status** to see the words available in your word bank
 
- * Reset
+ * Reset  
   Use **reset** to go back to a full word bank
 
- * Random word
+ * Random word  
   Use **rand** to select a random word out of the available words left in the word bank
 
- * Suggest
+ * Suggest  
   When left with only one or two unknown letters, this will search the available letters in a full dictionary to cover these.
   > (e.g. 'champ', 'clamp', 'cramp', 'stamp', 'swamp', 'tramp', etc.)
 
- * Play
+ * Play  
   Use **play** to play Wordle on a random 5 letter word. To exit play mode, use **exit** or **we**.
 
- * Exit
+ * Exit  
   Enter **exit** or **we** to exit the script
