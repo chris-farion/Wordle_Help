@@ -3,7 +3,6 @@ from Wordle import *
 def test_empty_list():
     assert is_list_sorted([]) == True
 
-
 def test_singelton_list():
     assert is_list_sorted(['order']) == True
 
@@ -18,38 +17,4 @@ def test_split_list():
     first,second = split_list(list)
     assert first == ['above']
     assert second == ['order']
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
