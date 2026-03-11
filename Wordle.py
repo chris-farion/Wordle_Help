@@ -33,6 +33,8 @@ class Wordle_Node:
         return next_exists
     def disp(self):
         print(f"{self.letter}={self.val}@{self.pos}")
+    def __str__(self):
+        return f"{self.letter}={self.val}@{self.pos}"
 
 class Duplicate_Node:
     def __init__(self, letter=WILDCARD_RESULT):
@@ -49,6 +51,141 @@ class Duplicate_Node:
         if self.count != self.present:
             difference_between_count_and_presence = True
         return difference_between_count_and_presence
+
+class Rank_Node:
+    def __init__(self, word="",score=float("-inf")):
+        self.word = word
+        self.score = score
+        self.blue = False #Blue=True in a blue/gold tree
+        if self.word == "":
+            #For nil purposes
+            self.blue = True
+        self.left = None
+        self.right = None
+        self.parent = None
+
+class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
+    def __init__(self):
+        self.nil = Rank_Node()
+        self.root = self.nil
+        self.nodes = 0
+    def __str__(self):
+        color = "Blue"
+        if self.root.blue == False:
+            color = "Gold"
+        return f"This tree has {self.nodes} nodes."
+    def __add__(self,node):
+        print(f"Add {node.score}")
+        self.nodes += 1
+        node.left = node.right = self.nil
+        parent = None
+        ptr = self.root
+        while ptr != self.nil:
+            parent = ptr
+            print(f"Parent: {parent}")
+            if node.score < ptr.score:
+                ptr = ptr.left
+            else:
+                ptr = ptr.right
+        node.parent = parent
+        if parent is None:
+            self.root = node
+        elif node.score < parent.score:
+            parent.left = node
+        else:
+            parent.right = node
+        self._add_fix(node)
+        print()
+        return self
+    def _add_fix(self,node):
+        safety = 50
+        ind = 0
+        '''
+            |
+            G
+           / \
+          P   T
+         /
+        C
+        '''
+        while self.root != node and node.parent.blue == False and ind != safety:
+            print(f"Fix @ Node: {node.score}")
+            grandparent = node.parent.parent
+            #parent = node.parent
+            #child = node
+            if node.parent == grandparent.left:
+                #Uncle will be on the right
+                uncle = grandparent.right
+                print(f"Uncle is Blue? {uncle.blue}")
+                #Gold Uncle
+                if uncle.blue == False:
+                    grandparent.blue = False
+                    node.parent.blue = True
+                    uncle.blue = True
+                    node = grandparent
+                #Blue Uncle Angle
+                elif node == node.parent.right:
+                    node = node.parent
+                    self._rotate_left(node)
+                #Blue Uncle Line
+                elif node == node.parent.left:
+                    self._rotate_right(grandparent)
+                    node.parent.blue = True
+                    grandparent.blue = False
+            else: #Uncle will be on the left
+                uncle = grandparent.left
+                print(f"Uncle is Blue? {uncle.blue}")
+                #Gold Uncle
+                if uncle.blue == False:
+                    grandparent.blue = False
+                    node.parent.blue = True
+                    uncle.blue = True
+                    node = grandparent
+                #Blue Uncle Angle
+                elif node == node.parent.left:
+                    node = node.parent
+                    self._rotate_right(node)
+                #blue Uncle Line
+                elif node == node.parent.right:
+                    self._rotate_left(grandparent)
+                    node.parent.blue = True
+                    grandparent.blue = False
+                pass
+            ind += 1
+        self.root.blue = True
+        return self
+    def _rotate_left(self,node):
+        print(f"Rotate {node.score} left")
+        child = node.right
+        if child == self.nil:
+            print("Can't rotate")
+            return self
+        # Give
+        if self.root == node:
+            self.root = child
+        else:
+            child.parent = node.parent
+        # Flip
+        node.parent = child
+        # Transfer
+        node.right = child.left
+        return self
+    def _rotate_right(self,node):
+        print(f"Rotate {node.score} right")
+        child = node.left
+        if child == self.nil:
+            print("Can't rotate")
+            return self
+        # Give
+        if self.root == node:
+            self.root = child
+        else:
+            child.parent = node.parent
+        # Flip
+        node.parent = child
+        # Transfer
+        node.left = child.right
+        return self
 
 def load_5_letter_words():
     file_path = 'Total_Wordle_Word_Bank.txt'
@@ -452,7 +589,7 @@ def collect_remaining_letters(words):
             total += alphabet[alphabet_string[letter_index]]
         letter_index += 1
     mean = total / alpha_len
-    print(f"average: {mean}")
+    #    print(f"Mean: {mean}")
     std_0_terms = (alpha_len-len(alphabet))*(mean**2)
     sum_4_stdev = 0
     for letter in alphabet:
@@ -461,29 +598,15 @@ def collect_remaining_letters(words):
     sum_4_stdev += std_0_terms
     sigma_squared = sum_4_stdev/alpha_len
     stdev = sigma_squared ** (1/2)
-    print(f"Stdev: {stdev}")
+    #    print(f"Stdev: {stdev}")
+    if stdev == 0:
+        return words
     for letter in alphabet:
         temp = (alphabet[letter]-mean)/stdev
         alphabet[letter] = temp
     score_for_0 = -mean/stdev
     ranking = {}
-    high_score = -255
-    for i in range(5,0,-1):
-        ranking[i] = []
-#    for word in dictionary:
-#        score = 0
-#        wrd = {}
-#        for letter in word:
-#            if letter not in wrd:
-#                wrd[letter] = [letter]
-#            if letter in alphabet:
-#                score += 1
-#        if score != 0:
-#            ranking[score].append(word)
-#    current_score = 4
-#    while ranking[current_score] is []:
-#        current_score -= 1
-#    ranking = ranking[current_score]
+    high_score = float("-inf")
     for word in dictionary:
         score = 0
         partial_dict = {}
@@ -496,15 +619,78 @@ def collect_remaining_letters(words):
             else:
                 score += score_for_0
         if score > high_score:
+            print(f"{word} : {score}")
             high_score = score
             best_word = word
-#            ranking[score].append(word)
-    current_score = 4
-    while ranking[current_score] is []:
-        current_score -= 1
-    ranking = ranking[current_score]
-#    return ranking
+    #    print(f"Score of this word is {high_score}")
     return best_word
+
+def suggest_words(words):
+    if len(words) <= 1:
+        return words
+    num_of_words = len(words)
+    dictionary = load_5_letter_words()
+    letter_count = {}
+    # Count number of letters in remaining words
+    for word in words:
+        for letter in word:
+            if letter in letter_count:
+                letter_count[letter] += 1
+            else:
+                letter_count[letter] = 1
+    # Delete letters that are already Yes or Wrong position
+    for letter in list(letter_count.keys()):
+        if letter_count[letter] >= num_of_words:
+            letter_count[letter] -= num_of_words
+        if letter_count[letter] == 0:
+            del letter_count[letter]
+    mean,stdev = stats(letter_count)
+    print(f"Mean: {mean}\nStdev.P: {stdev}")
+    if stdev == 0:
+        stdev = 1
+    scores = {"0":(-mean/stdev)}
+    for letter in letter_count:
+        scores[letter] = (letter_count[letter]-mean)/stdev
+    #Start the Binary Tree
+    high_score = float("-inf")
+    tree = Blue_Gold_Tree()
+    for word in dictionary:
+        score = 0
+        partial_dict = {}
+        for letter in word:
+            if letter in letter_count and letter not in partial_dict:
+                partial_dict[letter] = [letter]
+                score += scores[letter]
+            elif letter in letter_count and letter in partial_dict:
+                pass
+            else:
+                score += scores["0"]
+        curr = Rank_Node(word,score)
+        tree = update_tree(curr,12)
+        if score > high_score:
+            print(f"{word} : {score}")
+            high_score = score
+            best_word = word
+    return best_word
+
+def update_tree(rank_node,num_rank=1):
+    # Insert or skip_rank node in the top N of num_rank`
+
+    return num_rank
+
+def stats(letter_counts):
+    num_of_chars_in_counts = len(letter_counts)
+    summation = 0
+    for letter in letter_counts:
+        summation += letter_counts[letter]
+    mean = summation / num_of_chars_in_counts
+    squared_summation = 0
+    for letter in letter_counts:
+        temp = (letter_counts[letter] - mean)**2
+        squared_summation += temp
+    sigma_squared = squared_summation / num_of_chars_in_counts
+    stdev = sigma_squared**(1/2)
+    return mean,stdev
 
 def play(word):
     word_dict = {}
@@ -571,4 +757,30 @@ swamp nnnnn
 viced nynyy
 jibed nynyy
 nixed yyyyy
+
+howls wnnyw
+aleye wwnnn
+Should suggest something with l,m,t and not allel
+
+scare nnnww
+aeros nywnn
+deity nynnn
+elven wnnyn
+emmew wnnyw
+Should suggest something with f,w,h,b and not rebbe
 '''
+#sample = ['brank','drank','frank','prank','trank']
+#sample = ['codas', 'dados', 'fados', 'hodad', 'hodja', 'modal', 'nodal', 'podal', 'radon', 'sados', 'sodas', 'today', 'vodka']
+#asd = suggest_words(sample)
+#print(f"{asd}")
+
+bgtree = Blue_Gold_Tree()
+boca = Rank_Node("Boca",144)
+riber = Rank_Node("riber",-1)
+union = Rank_Node("Union",9)
+rando = random.randint(0,8)
+rand = Rank_Node("Random",rando)
+bgtree += boca
+bgtree += riber
+bgtree += rand
+bgtree += union

@@ -17,11 +17,12 @@ while cmd_line != CMD_EXIT:
             rando = random.randint(0,len(w)-1)
             print(f"Random word: {w[rando]}")
         elif cmd_line == CMD_PLAY:
-            w = full_list_of_words
-            rando = random.randint(0,len(w))
-            play(w[rando])
+            all_words = full_list_of_words
+            rando = random.randint(0,len(all_words))
+            play(all_words[rando])
         elif cmd_line == CMD_SUGGEST:
-            suggestions = collect_remaining_letters(w)
+            #            suggestions = collect_remaining_letters(w)
+            suggestions = suggest_words(w)
             print(suggestions)
         else:
             try:
@@ -30,3 +31,4 @@ while cmd_line != CMD_EXIT:
             except TypeError as e:
                 print("Error code ->", e)
 
+#https://wordlearchive.com/288
