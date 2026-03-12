@@ -69,20 +69,13 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         self.nil = Rank_Node()
         self.root = self.nil
         self.nodes = 0
-    def __str__(self):
-        color = "Blue"
-        if self.root.blue == False:
-            color = "Gold"
-        return f"This tree has {self.nodes} nodes."
     def __add__(self,node):
-        print(f"Add {node.score}")
         self.nodes += 1
         node.left = node.right = self.nil
         parent = None
         ptr = self.root
         while ptr != self.nil:
             parent = ptr
-            print(f"Parent: {parent}")
             if node.score < ptr.score:
                 ptr = ptr.left
             else:
@@ -95,7 +88,6 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         else:
             parent.right = node
         self._add_fix(node)
-        print()
         return self
     def _add_fix(self,node):
         safety = 50
@@ -109,14 +101,12 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         C
         '''
         while self.root != node and node.parent.blue == False and ind != safety:
-            print(f"Fix @ Node: {node.score}")
             grandparent = node.parent.parent
             #parent = node.parent
             #child = node
             if node.parent == grandparent.left:
                 #Uncle will be on the right
                 uncle = grandparent.right
-                print(f"Uncle is Blue? {uncle.blue}")
                 #Gold Uncle
                 if uncle.blue == False:
                     grandparent.blue = False
@@ -134,7 +124,6 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
                     grandparent.blue = False
             else: #Uncle will be on the left
                 uncle = grandparent.left
-                print(f"Uncle is Blue? {uncle.blue}")
                 #Gold Uncle
                 if uncle.blue == False:
                     grandparent.blue = False
@@ -155,10 +144,8 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         self.root.blue = True
         return self
     def _rotate_left(self,node):
-        print(f"Rotate {node.score} left")
         child = node.right
         if child == self.nil:
-            print("Can't rotate")
             return self
         # Give
         if self.root == node:
@@ -171,10 +158,8 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         node.right = child.left
         return self
     def _rotate_right(self,node):
-        print(f"Rotate {node.score} right")
         child = node.left
         if child == self.nil:
-            print("Can't rotate")
             return self
         # Give
         if self.root == node:
@@ -666,17 +651,13 @@ def suggest_words(words):
             else:
                 score += scores["0"]
         curr = Rank_Node(word,score)
-        tree = update_tree(curr,12)
+        tree += curr
         if score > high_score:
             print(f"{word} : {score}")
             high_score = score
             best_word = word
+    print(tree)
     return best_word
-
-def update_tree(rank_node,num_rank=1):
-    # Insert or skip_rank node in the top N of num_rank`
-
-    return num_rank
 
 def stats(letter_counts):
     num_of_chars_in_counts = len(letter_counts)
@@ -774,13 +755,13 @@ Should suggest something with f,w,h,b and not rebbe
 #asd = suggest_words(sample)
 #print(f"{asd}")
 
-bgtree = Blue_Gold_Tree()
-boca = Rank_Node("Boca",144)
-riber = Rank_Node("riber",-1)
-union = Rank_Node("Union",9)
-rando = random.randint(0,8)
-rand = Rank_Node("Random",rando)
-bgtree += boca
-bgtree += riber
-bgtree += rand
-bgtree += union
+#bgtree = Blue_Gold_Tree()
+#boca = Rank_Node("Boca",144)
+#riber = Rank_Node("riber",-1)
+#union = Rank_Node("Union",9)
+#rando = random.randint(0,8)
+#rand = Rank_Node("Random",rando)
+#bgtree += boca
+#bgtree += riber
+#bgtree += rand
+#bgtree += union
