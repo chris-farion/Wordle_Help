@@ -63,6 +63,8 @@ class Rank_Node:
         self.left = None
         self.right = None
         self.parent = None
+    def __str__(self):
+        return super().__repr__()[-6:-1]
 
 class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
     def __init__(self):
@@ -92,14 +94,6 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
     def _add_fix(self,node):
         safety = 50
         ind = 0
-        '''
-            |
-            G
-           / \
-          P   T
-         /
-        C
-        '''
         while self.root != node and node.parent.blue == False and ind != safety:
             grandparent = node.parent.parent
             #parent = node.parent
@@ -107,17 +101,14 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
             if node.parent == grandparent.left:
                 #Uncle will be on the right
                 uncle = grandparent.right
-                #Gold Uncle
                 if uncle.blue == False:
                     grandparent.blue = False
                     node.parent.blue = True
                     uncle.blue = True
                     node = grandparent
-                #Blue Uncle Angle
                 elif node == node.parent.right:
                     node = node.parent
                     self._rotate_left(node)
-                #Blue Uncle Line
                 elif node == node.parent.left:
                     self._rotate_right(grandparent)
                     node.parent.blue = True
@@ -150,12 +141,15 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         # Give
         if self.root == node:
             self.root = child
+            child.parent = None
         else:
             child.parent = node.parent
+            node.parent.right = child
         # Flip
         node.parent = child
         # Transfer
         node.right = child.left
+        child.left = node
         return self
     def _rotate_right(self,node):
         child = node.left
@@ -164,12 +158,34 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         # Give
         if self.root == node:
             self.root = child
+            child.parent = None
         else:
             child.parent = node.parent
+            node.parent.left = child
         # Flip
         node.parent = child
         # Transfer
         node.left = child.right
+        child.right = node
+        return self
+    def __sub__(self,node):
+        if node.left == self.nil and node.right == self.nil:
+            node.parent.left = None
+            node.parent = None
+        elif node.left != self.nil and node.right != self.nil:
+            print(f"{node} has two children")
+            pass
+        else:
+            print(f"\nParent {node.parent}\nNode   {node}\nChild  {node.left}\n")
+            if node.left != self.nil:
+                print(f"Entered the left {node.left.parent}:{node.parent.left}")
+                node.left.parent = node.parent
+                node.parent.left = node.left
+                print(f"Exited the left {node.left.parent}:{node.parent.left}")
+            else:
+                node.right.parent = node.parent
+                node.parent.right = node.right
+        del node
         return self
 
 def load_5_letter_words():
@@ -551,66 +567,7 @@ def remaining_indices(schedule):
             non_yes_indices.append(schedule.pos)
     return non_yes_indices
 
-def collect_remaining_letters(words):
-    if len(words) <= 1:
-        return words
-    alphabet_string = "abcdefghijklmnopqrstuvwxyz"
-    dictionary = load_5_letter_words()
-    alphabet = {}
-    for letter in alphabet_string:
-        alphabet[letter] = 0
-    for word in words:
-        for letter in word:
-            alphabet[letter] += 1
-    alpha_len = len(alphabet)
-    letter_index = 0
-    total = 0
-    while letter_index < alpha_len:
-        if alphabet[alphabet_string[letter_index]] >= len(words):
-            alphabet[alphabet_string[letter_index]] -= len(words)
-        if alphabet[alphabet_string[letter_index]] == 0:
-            del alphabet[alphabet_string[letter_index]]
-        else:
-            total += alphabet[alphabet_string[letter_index]]
-        letter_index += 1
-    mean = total / alpha_len
-    #    print(f"Mean: {mean}")
-    std_0_terms = (alpha_len-len(alphabet))*(mean**2)
-    sum_4_stdev = 0
-    for letter in alphabet:
-        partial = (alphabet[letter] - mean)**2
-        sum_4_stdev += partial
-    sum_4_stdev += std_0_terms
-    sigma_squared = sum_4_stdev/alpha_len
-    stdev = sigma_squared ** (1/2)
-    #    print(f"Stdev: {stdev}")
-    if stdev == 0:
-        return words
-    for letter in alphabet:
-        temp = (alphabet[letter]-mean)/stdev
-        alphabet[letter] = temp
-    score_for_0 = -mean/stdev
-    ranking = {}
-    high_score = float("-inf")
-    for word in dictionary:
-        score = 0
-        partial_dict = {}
-        for letter in word:
-            if letter in alphabet and letter not in partial_dict:
-                partial_dict[letter] = [letter]
-                score += alphabet[letter]
-            elif letter in alphabet and letter in partial_dict:
-                pass
-            else:
-                score += score_for_0
-        if score > high_score:
-            print(f"{word} : {score}")
-            high_score = score
-            best_word = word
-    #    print(f"Score of this word is {high_score}")
-    return best_word
-
-def suggest_words(words):
+def suggest_words(words,top=1):
     if len(words) <= 1:
         return words
     num_of_words = len(words)
@@ -626,19 +583,24 @@ def suggest_words(words):
     # Delete letters that are already Yes or Wrong position
     for letter in list(letter_count.keys()):
         if letter_count[letter] >= num_of_words:
-            letter_count[letter] -= num_of_words
+            letter_count[letter] = letter_count[letter] % num_of_words 
         if letter_count[letter] == 0:
             del letter_count[letter]
     mean,stdev = stats(letter_count)
     print(f"Mean: {mean}\nStdev.P: {stdev}")
     if stdev == 0:
         stdev = 1
-    scores = {"0":(-mean/stdev)}
-    for letter in letter_count:
-        scores[letter] = (letter_count[letter]-mean)/stdev
+        scores = {"0":(-mean/stdev)}
+        for letter in letter_count:
+            scores[letter] = 1
+    else:
+        scores = {"0":(-mean/stdev)}
+        for letter in letter_count:
+            scores[letter] = (letter_count[letter]-mean)/stdev
     #Start the Binary Tree
+    print(f"Letter scores\n\n {scores}")
     high_score = float("-inf")
-    tree = Blue_Gold_Tree()
+    #tree = Blue_Gold_Tree()
     for word in dictionary:
         score = 0
         partial_dict = {}
@@ -647,16 +609,16 @@ def suggest_words(words):
                 partial_dict[letter] = [letter]
                 score += scores[letter]
             elif letter in letter_count and letter in partial_dict:
-                pass
+                score += scores["0"]
             else:
                 score += scores["0"]
-        curr = Rank_Node(word,score)
-        tree += curr
+        #curr = Rank_Node(word,score)
+        #tree += curr
         if score > high_score:
             print(f"{word} : {score}")
             high_score = score
             best_word = word
-    print(tree)
+    #print(tree)
     return best_word
 
 def stats(letter_counts):
@@ -755,13 +717,26 @@ Should suggest something with f,w,h,b and not rebbe
 #asd = suggest_words(sample)
 #print(f"{asd}")
 
-#bgtree = Blue_Gold_Tree()
-#boca = Rank_Node("Boca",144)
-#riber = Rank_Node("riber",-1)
-#union = Rank_Node("Union",9)
-#rando = random.randint(0,8)
-#rand = Rank_Node("Random",rando)
-#bgtree += boca
-#bgtree += riber
-#bgtree += rand
-#bgtree += union
+test_tree = Blue_Gold_Tree()
+node_050 = Rank_Node("None",50)
+node_025 = Rank_Node("None",25)
+node_075 = Rank_Node("None",75)
+node_013 = Rank_Node("None",13)
+node_038 = Rank_Node("None",38)
+node_063 = Rank_Node("None",63)
+node_088 = Rank_Node("None",88)
+node_007 = Rank_Node("None",7)
+node_019 = Rank_Node("None",19)
+node_032 = Rank_Node("None",32)
+node_044 = Rank_Node("None",44)
+node_057 = Rank_Node("None",57)
+node_069 = Rank_Node("None",69)
+node_082 = Rank_Node("None",82)
+node_094 = Rank_Node("None",94)
+test_tree += node_050
+test_tree += node_025
+test_tree += node_075
+print(f"{node_050} L> {node_050.left}")
+test_tree += node_013
+test_tree -= node_025
+print(f"{node_050} L> {node_050.left}")
