@@ -31,10 +31,11 @@ class Wordle_Node:
         if self.next is not None:
             next_exists = True
         return next_exists
-    def disp(self):
-        print(f"{self.letter}={self.val}@{self.pos}")
     def __str__(self):
         return f"{self.letter}={self.val}@{self.pos}"
+
+    def disp(self):
+        print(f"{self.letter}={self.val}@{self.pos}")
 
 class Duplicate_Node:
     def __init__(self, letter=WILDCARD_RESULT):
@@ -56,10 +57,10 @@ class Rank_Node:
     def __init__(self, word="",score=float("-inf")):
         self.word = word
         self.score = score
-        self.blue = False #Blue=True in a blue/gold tree
+        self.isBlue = False #Blue=True in a blue/gold tree
         if self.word == "":
             #For nil purposes
-            self.blue = True
+            self.isBlue = True
         self.left = None
         self.right = None
         self.parent = None
@@ -94,32 +95,32 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
     def _add_fix(self,node):
         safety = 50
         ind = 0
-        while self.root != node and node.parent.blue == False and ind != safety:
+        while self.root != node and node.parent.isBlue == False and ind != safety:
             grandparent = node.parent.parent
             #parent = node.parent
             #child = node
             if node.parent == grandparent.left:
                 #Uncle will be on the right
                 uncle = grandparent.right
-                if uncle.blue == False:
-                    grandparent.blue = False
-                    node.parent.blue = True
-                    uncle.blue = True
+                if uncle.isBlue == False:
+                    grandparent.isBlue = False
+                    node.parent.isBlue = True
+                    uncle.isBlue = True
                     node = grandparent
                 elif node == node.parent.right:
                     node = node.parent
                     self._rotate_left(node)
                 elif node == node.parent.left:
                     self._rotate_right(grandparent)
-                    node.parent.blue = True
-                    grandparent.blue = False
+                    node.parent.isBlue = True
+                    grandparent.isBlue = False
             else: #Uncle will be on the left
                 uncle = grandparent.left
                 #Gold Uncle
-                if uncle.blue == False:
-                    grandparent.blue = False
-                    node.parent.blue = True
-                    uncle.blue = True
+                if uncle.isBlue == False:
+                    grandparent.isBlue = False
+                    node.parent.isBlue = True
+                    uncle.isBlue = True
                     node = grandparent
                 #Blue Uncle Angle
                 elif node == node.parent.left:
@@ -128,47 +129,68 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
                 #blue Uncle Line
                 elif node == node.parent.right:
                     self._rotate_left(grandparent)
-                    node.parent.blue = True
-                    grandparent.blue = False
-                pass
+                    node.parent.isBlue = True
+                    grandparent.isBlue = False
             ind += 1
-        self.root.blue = True
+        self.root.isBlue = True
         return self
     def _rotate_left(self,node):
         child = node.right
-        if child == self.nil:
-            return self
+        # Transfer
+        node.right = child.left
+        if child.left != self.nil:
+            child.left.parent = node
+        else:
+            child.left.parent = node
+        # Flip
+        node.parent.right = child
+        child.left = node
         # Give
-        if self.root == node:
+        if node.parent is None:
             self.root = child
             child.parent = None
         else:
             child.parent = node.parent
-            node.parent.right = child
-        # Flip
         node.parent = child
+        return self
+    def _rotate_right_works(self,node):
+        child = node.left
         # Transfer
-        node.right = child.left
-        child.left = node
+        node.left = child.right
+        if child.right != self.nil:
+            child.right.parent = node
+        else:
+            child.right.parent = self.nil
+        # Flip
+        node.parent.left = child
+        child.right = node
+        # Give
+        if node.parent is None:
+            self.root = child
+            child.parent = None
+        else:
+            child.parent = node.parent
+        node.parent = child
         return self
     def _rotate_right(self,node):
         child = node.left
-        if child == self.nil:
-            return self
-        # Give
-        if self.root == node:
-            self.root = child
-            child.parent = None
-        else:
-            child.parent = node.parent
-            node.parent.left = child
-        # Flip
-        node.parent = child
-        # Transfer
-        node.left = child.right
+        parent = node.parent
+        right = child.right
+        print(f"Start:\nParent {parent}\nNode   {node}\nChild  {child}\nRight  {right}\nNil    {self.nil}\n")
+        print(f"Before Pointers:\nParent.L {parent.left}\nNode.L   {node.left}\nNode.P   {node.parent}\nChild.R  {child.right}\nChild.P  {child.parent}\nRight.P  {right.parent}\n")
+        node.left = self.nil
+        if child.right != self.nil:
+            node.left = child.right
+            child.right.parent = node
         child.right = node
+        child.parent = parent
+        parent.left = child
+        node.parent = child
+        print(f"Final Pointers:\nParent.L {parent.left}\nNode.L   {node.left}\nNode.P   {node.parent}\nChild.R  {child.right}\nChild.P  {child.parent}\nRight.P  {right.parent}\n")
         return self
     def __sub__(self,node):
+        #_find(node,node.word)
+        self._find(node,node.score)
         if node.left == self.nil and node.right == self.nil:
             node.parent.left = None
             node.parent = None
@@ -178,15 +200,41 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         else:
             print(f"\nParent {node.parent}\nNode   {node}\nChild  {node.left}\n")
             if node.left != self.nil:
-                print(f"Entered the left {node.left.parent}:{node.parent.left}")
                 node.left.parent = node.parent
                 node.parent.left = node.left
-                print(f"Exited the left {node.left.parent}:{node.parent.left}")
             else:
                 node.right.parent = node.parent
                 node.parent.right = node.right
         del node
         return self
+    def _find(self,node,data):
+        #if node != self.nil or node.word == data:
+            #return node
+        #if node.word < data:
+            #return _find(node.left, data)
+        #return _find(node.right,data)
+        ptr = self.root
+        while ptr.score != data:
+            if ptr == self.nil:
+                exit
+            if ptr.score < data:
+                ptr = ptr.right
+            else:
+                ptr = ptr.left
+        if ptr.score == data:
+            return node
+        return self
+    def _in_order_successor(self,node):
+        ptr = node
+        while ptr != self.nil:
+            ptr = ptr.left
+        return ptr
+    def _in_order_predessor(self,node):
+        ptr = node
+        while ptr != self.nil:
+            ptr = ptr.right
+        return ptr
+
 
 def load_5_letter_words():
     file_path = 'Total_Wordle_Word_Bank.txt'
@@ -612,8 +660,6 @@ def suggest_words(words,top=1):
                 score += scores["0"]
             else:
                 score += scores["0"]
-        #curr = Rank_Node(word,score)
-        #tree += curr
         if score > high_score:
             print(f"{word} : {score}")
             high_score = score
@@ -717,6 +763,24 @@ Should suggest something with f,w,h,b and not rebbe
 #asd = suggest_words(sample)
 #print(f"{asd}")
 
+    #def _rotate_left(self,node):
+        #child = node.right
+        #if child == self.nil:
+            #return self
+        ## Give
+        #if self.root == node:
+            #self.root = child
+            #child.parent = None
+        #else:
+            #child.parent = node.parent
+            #node.parent.right = child
+        ## Flip
+        #node.parent = child
+        ## Transfer
+        #node.right = child.left
+        #child.left = node
+        #return self
+
 test_tree = Blue_Gold_Tree()
 node_050 = Rank_Node("None",50)
 node_025 = Rank_Node("None",25)
@@ -736,7 +800,5 @@ node_094 = Rank_Node("None",94)
 test_tree += node_050
 test_tree += node_025
 test_tree += node_075
-print(f"{node_050} L> {node_050.left}")
 test_tree += node_013
-test_tree -= node_025
-print(f"{node_050} L> {node_050.left}")
+test_tree += node_007

@@ -29,7 +29,7 @@ def test_root_node_is_blue():
     test_tree = Blue_Gold_Tree()
     root_node = Rank_Node("Root",0)
     test_tree += root_node
-    assert root_node.blue == True
+    assert root_node.isBlue == True
 
 def test_add_greater_than_node():
     test_tree = Blue_Gold_Tree()
@@ -58,10 +58,10 @@ def test_gold_uncle_left():
     test_tree += node_015
     test_tree += node_001
     assert test_tree.root == node_010
-    assert node_010.blue == True
-    assert node_005.blue == True
-    assert node_015.blue == True
-    assert node_001.blue == False
+    assert node_010.isBlue == True
+    assert node_005.isBlue == True
+    assert node_015.isBlue == True
+    assert node_001.isBlue == False
 
 def test_gold_uncle_right():
     test_tree = Blue_Gold_Tree()
@@ -74,10 +74,10 @@ def test_gold_uncle_right():
     test_tree += node_015
     test_tree += node_020
     assert test_tree.root == node_010
-    assert node_010.blue == True
-    assert node_005.blue == True
-    assert node_015.blue == True
-    assert node_020.blue == False
+    assert node_010.isBlue == True
+    assert node_005.isBlue == True
+    assert node_015.isBlue == True
+    assert node_020.isBlue == False
 
 def test_blue_uncle_angle():
     test_tree = Blue_Gold_Tree()
@@ -90,10 +90,10 @@ def test_blue_uncle_angle():
     test_tree += node_015
     test_tree += node_012
     assert test_tree.root == node_010
-    assert node_010.blue == True
-    assert node_005.blue == True
-    assert node_015.blue == True
-    assert node_012.blue == False
+    assert node_010.isBlue == True
+    assert node_005.isBlue == True
+    assert node_015.isBlue == True
+    assert node_012.isBlue == False
 
 def test_blue_uncle_line():
     test_tree = Blue_Gold_Tree()
@@ -102,18 +102,35 @@ def test_blue_uncle_line():
     node_015 = Rank_Node("None",15)
     node_003 = Rank_Node("None",3)
     node_001 = Rank_Node("None",1)
+    print(f"rt.lt: {test_tree.root}\n10: {node_010}\n 5: {node_005}\n 3: {node_003}\n 1: {node_001}\nnl: {test_tree.nil}")
+    #print(f"rt: {test_tree.root}\n10: {node_010}\n 5: {node_005}\n 3: {node_003}\nnl: {test_tree.root.left}")
+    #print(f"rt.lft: {test_tree.root.left}-{node_010.score}\n")
+    print(f"+10")
     test_tree += node_010
+    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
+    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
+    print(f"+05")
     test_tree += node_005
+    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
+    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
+    print(f"+15")
     test_tree += node_015
+    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
+    print(f"+03")
     test_tree += node_003
+    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
+    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
+    print(f"+01")
     test_tree += node_001
+    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
+    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
     assert test_tree.root == node_010
     assert test_tree.root.left == node_003
-    assert node_010.blue == True
-    assert node_005.blue == False
-    assert node_015.blue == True
-    assert node_003.blue == True
-    assert node_001.blue == False
+    assert node_010.isBlue == True
+    assert node_005.isBlue == False
+    assert node_015.isBlue == True
+    assert node_003.isBlue == True
+    assert node_001.isBlue == False
 
 def test_right_rotation():
     test_tree = Blue_Gold_Tree()
