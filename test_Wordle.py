@@ -102,28 +102,11 @@ def test_blue_uncle_line():
     node_015 = Rank_Node("None",15)
     node_003 = Rank_Node("None",3)
     node_001 = Rank_Node("None",1)
-    print(f"rt.lt: {test_tree.root}\n10: {node_010}\n 5: {node_005}\n 3: {node_003}\n 1: {node_001}\nnl: {test_tree.nil}")
-    #print(f"rt: {test_tree.root}\n10: {node_010}\n 5: {node_005}\n 3: {node_003}\nnl: {test_tree.root.left}")
-    #print(f"rt.lft: {test_tree.root.left}-{node_010.score}\n")
-    print(f"+10")
     test_tree += node_010
-    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
-    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
-    print(f"+05")
     test_tree += node_005
-    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
-    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
-    print(f"+15")
     test_tree += node_015
-    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
-    print(f"+03")
     test_tree += node_003
-    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
-    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
-    print(f"+01")
     test_tree += node_001
-    print(f"rt.lt: {test_tree.root.left}\n10.lt: {node_010.left}\n 5.lt: {node_005.left}\n 5.pt: {node_005.parent}\n 3.pt: {node_003.parent}\n")
-    #print(f"rt.lft: {test_tree.root.left}-{test_tree.root.left.score}\n")
     assert test_tree.root == node_010
     assert test_tree.root.left == node_003
     assert node_010.isBlue == True
@@ -215,7 +198,8 @@ def test_delete_leaf_node():
     test_tree += node_075
     test_tree += node_013
     test_tree -= node_013
-    assert node_025.left == None
+    assert node_025.left.score == float("-inf")
+    assert test_tree.nodes == 3
 
 def test_delete_node_1_child():
     test_tree = Blue_Gold_Tree()
@@ -240,3 +224,53 @@ def test_delete_node_1_child():
     test_tree += node_013
     test_tree -= node_025
     assert node_050.left == node_013
+    assert test_tree.nodes == 3
+
+def test_delete_node_2_children():
+    test_tree = Blue_Gold_Tree()
+    node_050 = Rank_Node("None",50)
+    node_025 = Rank_Node("None",25)
+    node_075 = Rank_Node("None",75)
+    node_013 = Rank_Node("None",13)
+    node_038 = Rank_Node("None",38)
+    node_063 = Rank_Node("None",63)
+    node_088 = Rank_Node("None",88)
+    node_007 = Rank_Node("None",7)
+    node_019 = Rank_Node("None",19)
+    node_032 = Rank_Node("None",32)
+    node_044 = Rank_Node("None",44)
+    node_057 = Rank_Node("None",57)
+    node_069 = Rank_Node("None",69)
+    node_082 = Rank_Node("None",82)
+    node_094 = Rank_Node("None",94)
+    test_tree += node_050
+    test_tree += node_025
+    test_tree += node_075
+    test_tree += node_013
+    test_tree += node_038
+    test_tree -= node_025
+    assert test_tree.nodes == 4
+    assert test_tree.root.left == node_038
+
+def test_delete_node_not_found():
+    test_tree = Blue_Gold_Tree()
+    node_050 = Rank_Node("None",50)
+    node_025 = Rank_Node("None",25)
+    node_075 = Rank_Node("None",75)
+    node_013 = Rank_Node("None",13)
+    node_038 = Rank_Node("None",38)
+    node_063 = Rank_Node("None",63)
+    node_088 = Rank_Node("None",88)
+    node_007 = Rank_Node("None",7)
+    node_019 = Rank_Node("None",19)
+    node_032 = Rank_Node("None",32)
+    node_044 = Rank_Node("None",44)
+    node_057 = Rank_Node("None",57)
+    node_069 = Rank_Node("None",69)
+    node_082 = Rank_Node("None",82)
+    node_094 = Rank_Node("None",94)
+    test_tree += node_050
+    test_tree += node_025
+    test_tree += node_075
+    test_tree -= node_038
+    assert test_tree.nodes == 3

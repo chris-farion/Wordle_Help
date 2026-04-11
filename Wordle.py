@@ -92,13 +92,11 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
             parent.right = node
         self._add_fix(node)
         return self
-    def _add_fix(self,node):
+    def _add_fix_works(self,node):
         safety = 50
         ind = 0
         while self.root != node and node.parent.isBlue == False and ind != safety:
             grandparent = node.parent.parent
-            #parent = node.parent
-            #child = node
             if node.parent == grandparent.left:
                 #Uncle will be on the right
                 uncle = grandparent.right
@@ -134,96 +132,128 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
             ind += 1
         self.root.isBlue = True
         return self
+    def _add_fix(self,node):
+        while self.root != node and node.parent.isBlue == False:
+            grandparent = node.parent.parent
+            if node.parent == grandparent.left:
+                #Uncle will be on the right
+                uncle = grandparent.right
+                if uncle.isBlue == False:
+                    grandparent.isBlue = False
+                    node.parent.isBlue = True
+                    uncle.isBlue = True
+                    node = grandparent
+                elif node == node.parent.right:
+                    node = node.parent
+                    self._rotate_left(node)
+                elif node == node.parent.left:
+                    self._rotate_right(grandparent)
+                    node.parent.isBlue = True
+                    grandparent.isBlue = False
+            else: #Uncle will be on the left
+                uncle = grandparent.left
+                #Gold Uncle
+                if uncle.isBlue == False:
+                    grandparent.isBlue = False
+                    node.parent.isBlue = True
+                    uncle.isBlue = True
+                    node = grandparent
+                #Blue Uncle Angle
+                elif node == node.parent.left:
+                    node = node.parent
+                    self._rotate_right(node)
+                #blue Uncle Line
+                elif node == node.parent.right:
+                    self._rotate_left(grandparent)
+                    node.parent.isBlue = True
+                    grandparent.isBlue = False
+        self.root.isBlue = True
+        return self
     def _rotate_left(self,node):
         child = node.right
-        # Transfer
-        node.right = child.left
+        node.right = self.nil
         if child.left != self.nil:
+            node.right = child.left
             child.left.parent = node
-        else:
-            child.left.parent = node
-        # Flip
-        node.parent.right = child
         child.left = node
-        # Give
         if node.parent is None:
             self.root = child
             child.parent = None
         else:
             child.parent = node.parent
+            node.parent.right = child
         node.parent = child
-        return self
-    def _rotate_right_works(self,node):
-        child = node.left
-        # Transfer
-        node.left = child.right
-        if child.right != self.nil:
-            child.right.parent = node
-        else:
-            child.right.parent = self.nil
-        # Flip
-        node.parent.left = child
-        child.right = node
-        # Give
-        if node.parent is None:
-            self.root = child
-            child.parent = None
-        else:
-            child.parent = node.parent
-        node.parent = child
+        child.left = node
         return self
     def _rotate_right(self,node):
         child = node.left
-        parent = node.parent
-        right = child.right
-        print(f"Start:\nParent {parent}\nNode   {node}\nChild  {child}\nRight  {right}\nNil    {self.nil}\n")
-        print(f"Before Pointers:\nParent.L {parent.left}\nNode.L   {node.left}\nNode.P   {node.parent}\nChild.R  {child.right}\nChild.P  {child.parent}\nRight.P  {right.parent}\n")
         node.left = self.nil
         if child.right != self.nil:
             node.left = child.right
             child.right.parent = node
         child.right = node
-        child.parent = parent
-        parent.left = child
+        if node.parent is None:
+            self.root = child
+            child.parent = None
+        else:
+            child.parent = node.parent
+            node.parent.left = child
         node.parent = child
-        print(f"Final Pointers:\nParent.L {parent.left}\nNode.L   {node.left}\nNode.P   {node.parent}\nChild.R  {child.right}\nChild.P  {child.parent}\nRight.P  {right.parent}\n")
+        child.right = node
         return self
-    def __sub__(self,node):
-        #_find(node,node.word)
-        self._find(node,node.score)
+    def __sub__(self,node2delete):
+        #node = self.find(node2delete,node2delete.score)
+        node = self._find(node2delete,node2delete.score)
+        if node == self.nil:
+            #Node not found
+            return self
         if node.left == self.nil and node.right == self.nil:
-            node.parent.left = None
-            node.parent = None
+            if self.root == node:
+                self.root = self.nil
+            elif node == node.parent.left:
+                node.parent.left = self.nil
+            else:
+                node.parent.right = self.nil
         elif node.left != self.nil and node.right != self.nil:
-            print(f"{node} has two children")
+            #2children
             pass
         else:
-            print(f"\nParent {node.parent}\nNode   {node}\nChild  {node.left}\n")
-            if node.left != self.nil:
-                node.left.parent = node.parent
-                node.parent.left = node.left
+            if self.root == node:
+                if node.left != self.nil:
+                    self.root = node.left
+                    node.left.parent = self.nil
+                else:
+                    self.root = node.right
+                    node.right.parent = self.nil
+            elif node == node.parent.left:
+                if node.left != self.nil:
+                    node.parent.left = node.left
+                    node.left.parent = node.parent
+                else:
+                    node.parent.left = node.right
+                    node.right.parent = node.parent
             else:
-                node.right.parent = node.parent
-                node.parent.right = node.right
+                if node.left != self.nil:
+                    node.parent.right = node.left
+                    node.left.parent = node.parent
+                else:
+                    node.parent.right = node.right
+                    node.right.parent = node.parent
         del node
+        self.nodes -= 1
         return self
+    #def find(self,node,data): #Comment out when finished. Just for testing
     def _find(self,node,data):
-        #if node != self.nil or node.word == data:
-            #return node
-        #if node.word < data:
-            #return _find(node.left, data)
-        #return _find(node.right,data)
         ptr = self.root
         while ptr.score != data:
             if ptr == self.nil:
-                exit
+                return self.nil
             if ptr.score < data:
                 ptr = ptr.right
             else:
                 ptr = ptr.left
         if ptr.score == data:
             return node
-        return self
     def _in_order_successor(self,node):
         ptr = node
         while ptr != self.nil:
