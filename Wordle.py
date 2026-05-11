@@ -33,7 +33,6 @@ class Wordle_Node:
         return next_exists
     def __str__(self):
         return f"{self.letter}={self.val}@{self.pos}"
-
     def disp(self):
         print(f"{self.letter}={self.val}@{self.pos}")
 
@@ -91,46 +90,6 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         else:
             parent.right = node
         self._add_fix(node)
-        return self
-    def _add_fix_works(self,node):
-        safety = 50
-        ind = 0
-        while self.root != node and node.parent.isBlue == False and ind != safety:
-            grandparent = node.parent.parent
-            if node.parent == grandparent.left:
-                #Uncle will be on the right
-                uncle = grandparent.right
-                if uncle.isBlue == False:
-                    grandparent.isBlue = False
-                    node.parent.isBlue = True
-                    uncle.isBlue = True
-                    node = grandparent
-                elif node == node.parent.right:
-                    node = node.parent
-                    self._rotate_left(node)
-                elif node == node.parent.left:
-                    self._rotate_right(grandparent)
-                    node.parent.isBlue = True
-                    grandparent.isBlue = False
-            else: #Uncle will be on the left
-                uncle = grandparent.left
-                #Gold Uncle
-                if uncle.isBlue == False:
-                    grandparent.isBlue = False
-                    node.parent.isBlue = True
-                    uncle.isBlue = True
-                    node = grandparent
-                #Blue Uncle Angle
-                elif node == node.parent.left:
-                    node = node.parent
-                    self._rotate_right(node)
-                #blue Uncle Line
-                elif node == node.parent.right:
-                    self._rotate_left(grandparent)
-                    node.parent.isBlue = True
-                    grandparent.isBlue = False
-            ind += 1
-        self.root.isBlue = True
         return self
     def _add_fix(self,node):
         while self.root != node and node.parent.isBlue == False:
@@ -201,12 +160,28 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         node.parent = child
         child.right = node
         return self
-    def __sub__(self,node2delete):
-        #node = self.find(node2delete,node2delete.score)
-        node = self._find(node2delete,node2delete.score)
+    #def _rotate(self,node,direction):
+        #child = node.direction
+        #node.direction = self.nil
+        #if child.opposite != self.nil:
+            #node.direction = child.opposite
+            #child.opposite.parent = node
+        #child.opposite = node
+        #if node.parent is None:
+            #self.root = child
+            #child.parent = None
+        #else:
+            #child.parent = node.parent
+            #node.parent.direction = child
+        #node.parent = child
+        #child.opposite = node
+        #return self
+    def __sub__(self,node_to_delete):
+        node = self._find(node_to_delete,node_to_delete.score)
         if node == self.nil:
             #Node not found
             return self
+        original_color = node.isBlue
         if node.left == self.nil and node.right == self.nil:
             if self.root == node:
                 self.root = self.nil
@@ -215,8 +190,11 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
             else:
                 node.parent.right = self.nil
         elif node.left != self.nil and node.right != self.nil:
-            #2children
-            pass
+            subtree = node.right
+            if node == node.parent.left:
+                sibling = node.parent.right
+            else:
+                sibling = node.parent.left
         else:
             if self.root == node:
                 if node.left != self.nil:
@@ -242,7 +220,6 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         del node
         self.nodes -= 1
         return self
-    #def find(self,node,data): #Comment out when finished. Just for testing
     def _find(self,node,data):
         ptr = self.root
         while ptr.score != data:
@@ -699,6 +676,8 @@ def suggest_words(words,top=1):
 
 def stats(letter_counts):
     num_of_chars_in_counts = len(letter_counts)
+    if num_of_chars_in_counts == 0:
+        num_of_chars_in_counts = 1
     summation = 0
     for letter in letter_counts:
         summation += letter_counts[letter]
