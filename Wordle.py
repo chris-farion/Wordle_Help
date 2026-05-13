@@ -686,7 +686,23 @@ def remaining_indices(schedule):
             non_yes_indices.append(schedule.pos)
     return non_yes_indices
 
-def suggest_words(words,top=1):
+def stats(letter_counts):
+    num_of_chars_in_counts = len(letter_counts)
+    if num_of_chars_in_counts == 0:
+        num_of_chars_in_counts = 1
+    summation = 0
+    for letter in letter_counts:
+        summation += letter_counts[letter]
+    mean = summation / num_of_chars_in_counts
+    squared_summation = 0
+    for letter in letter_counts:
+        temp = (letter_counts[letter] - mean)**2
+        squared_summation += temp
+    sigma_squared = squared_summation / num_of_chars_in_counts
+    stdev = sigma_squared**(1/2)
+    return mean,stdev
+
+def suggest_words(words,top=12):
     if len(words) <= 1:
         return words
     num_of_words = len(words)
@@ -719,7 +735,7 @@ def suggest_words(words,top=1):
     #Start the Binary Tree
     print(f"Letter scores\n\n {scores}")
     high_score = float("-inf")
-    #tree = Blue_Gold_Tree()
+    tree = Blue_Gold_Tree()
     for word in dictionary:
         score = 0
         partial_dict = {}
@@ -731,24 +747,20 @@ def suggest_words(words,top=1):
                 score += scores["0"]
             else:
                 score += scores["0"]
-        if score > high_score:
-            print(f"{word} : {score}")
-            high_score = score
-            best_word = word
-    return best_word
+        if tree.nodes < top:
+            node = Rank_Node(word,score)
+            tree += node
+        else:
+            lowest_score = tree._in_order_successor(tree.root)
+            if score > lowest_score.score:
+                tree -= lowest_score
+                tree += Rank_Node(word,score)
+    return tree
 
-def stats(letter_counts):
-    num_of_chars_in_counts = len(letter_counts)
-    if num_of_chars_in_counts == 0:
-        num_of_chars_in_counts = 1
-    summation = 0
-    for letter in letter_counts:
-        summation += letter_counts[letter]
-    mean = summation / num_of_chars_in_counts
-    squared_summation = 0
-    for letter in letter_counts:
-        temp = (letter_counts[letter] - mean)**2
-        squared_summation += temp
-    sigma_squared = squared_summation / num_of_chars_in_counts
-    stdev = sigma_squared**(1/2)
-    return mean,stdev
+def print_top_answers(tree,visited=0):
+    if tree.right.score != float("-inf"):
+        print_top_answers(tree.right)
+
+    print(f"{tree.word}\t{tree.score}")
+    if tree.left.score != float("-inf"):
+        print_top_answers(tree.left)
