@@ -31,7 +31,7 @@ while cmd_line != CMD_EXIT:
                 print("Error code ->", e)
 
 #https://wordlearchive.com/349
-# Suggest error below
+#Suggest error below
 #vakil nnnwn
 #rents wwwwn
 #inert yyyyy

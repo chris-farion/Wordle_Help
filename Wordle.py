@@ -63,8 +63,25 @@ class Rank_Node:
         self.left = None
         self.right = None
         self.parent = None
+    def parent_direction(self):
+        if self.parent is None:
+            direction = "root"
+        elif self == self.parent.left:
+            direction = "left"
+        else:
+            direction = "right"
+        return direction
     def __str__(self):
         return super().__repr__()[-6:-1]
+    def disp(self):
+        color = "Red  "
+        if self.isBlue:
+            color = "Black"
+        if self.parent is None:
+            prnt = "None"
+        else:
+            prnt = self.parent.score
+        return f"{self.score}-{color}-{prnt}-{self.left.score}-{self.right.score}"
 
 class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
     def __init__(self):
@@ -121,7 +138,7 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
                 elif node == node.parent.left:
                     node = node.parent
                     self._rotate_right(node)
-                #blue Uncle Line
+                #Blue Uncle Line
                 elif node == node.parent.right:
                     self._rotate_left(grandparent)
                     node.parent.isBlue = True
@@ -140,9 +157,12 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
             child.parent = None
         else:
             child.parent = node.parent
-            node.parent.right = child
+            direction = node.parent_direction()
+            if direction == "left":
+                node.parent.left = child
+            else:
+                node.parent.right = child
         node.parent = child
-        child.left = node
         return self
     def _rotate_right(self,node):
         child = node.left
@@ -156,69 +176,106 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
             child.parent = None
         else:
             child.parent = node.parent
-            node.parent.left = child
+            direction = node.parent_direction()
+            if direction == "left":
+                node.parent.left = child
+            else:
+                node.parent.right = child
         node.parent = child
         child.right = node
         return self
-    #def _rotate(self,node,direction):
-        #child = node.direction
-        #node.direction = self.nil
-        #if child.opposite != self.nil:
-            #node.direction = child.opposite
-            #child.opposite.parent = node
-        #child.opposite = node
-        #if node.parent is None:
-            #self.root = child
-            #child.parent = None
-        #else:
-            #child.parent = node.parent
-            #node.parent.direction = child
-        #node.parent = child
-        #child.opposite = node
-        #return self
     def __sub__(self,node_to_delete):
         node = self._find(node_to_delete,node_to_delete.score)
         if node == self.nil:
             #Node not found
             return self
-        original_color = node.isBlue
-        if node.left == self.nil and node.right == self.nil:
-            if self.root == node:
-                self.root = self.nil
-            elif node == node.parent.left:
-                node.parent.left = self.nil
-            else:
-                node.parent.right = self.nil
-        elif node.left != self.nil and node.right != self.nil:
+        replacement_color = node.isBlue
+        if node.left == self.nil:
+            #leaf or one child regardless
             subtree = node.right
-            if node == node.parent.left:
-                sibling = node.parent.right
-            else:
-                sibling = node.parent.left
+            self._relocate(node,node.right)
+        elif node.right == self.nil:
+            subtree = node.left
+            self._relocate(node,node.left)
         else:
-            if self.root == node:
-                if node.left != self.nil:
-                    self.root = node.left
-                    node.left.parent = self.nil
-                else:
-                    self.root = node.right
-                    node.right.parent = self.nil
-            elif node == node.parent.left:
-                if node.left != self.nil:
-                    node.parent.left = node.left
-                    node.left.parent = node.parent
-                else:
-                    node.parent.left = node.right
-                    node.right.parent = node.parent
+            replacement = self._in_order_successor(node.right)
+            replacement_color = replacement.isBlue
+            subtree = replacement.right
+            if replacement.parent == node:
+                subtree.parent = replacement
             else:
-                if node.left != self.nil:
-                    node.parent.right = node.left
-                    node.left.parent = node.parent
-                else:
-                    node.parent.right = node.right
-                    node.right.parent = node.parent
+                self._relocate(replacement,replacement.right)
+                replacement.right = node.right
+                replacement.right.parent = replacement
+            self._relocate(node,replacement)
+            replacement.left = node.left
+            replacement.left.parent = replacement
+            replacement.isBlue = node.isBlue
+        if replacement_color:
+            self._sub_fix(subtree)
         del node
         self.nodes -= 1
+        return self
+    def _sub_fix(self,node):
+        while node != self.root and node.isBlue:
+            #Sibling on the right
+            if node == node.parent.left:
+                sibling = node.parent.right
+                if not sibling.isBlue:
+                    sibling.isBlue = True
+                    node.parent.isBlue = False
+                    self._rotate_left(node.parent)
+                else:
+                    if sibling.left == self.nil or sibling.left is None:
+                        sibling_left_child_isBlue = True
+                    else:
+                        sibling_left_child_isBlue = sibling.left.isBlue
+                    if sibling.right == self.nil or sibling.right is None:
+                        sibling_right_child_isBlue = True
+                    else:
+                        sibling_right_child_isBlue = sibling.right.isBlue
+                    if sibling_left_child_isBlue and sibling_right_child_isBlue:
+                        sibling.isBlue = False
+                        node = node.parent
+                    elif not sibling_left_child_isBlue and sibling_right_child_isBlue:
+                        sibling.left.isBlue = True
+                        sibling.isBlue = False
+                        self._rotate_right(sibling)
+                    else:
+                        sibling.isBlue = node.parent.isBlue
+                        sibling.right.isBlue = True
+                        node.parent.isBlue = True
+                        self._rotate_left(node.parent)
+                        node = self.root
+            else: #Sibling on the left
+                sibling = node.parent.left
+                if not sibling.isBlue:
+                    sibling.isBlue = True
+                    node.parent.isBlue = False
+                    self._rotate_right(node.parent)
+                else:
+                    if sibling.left == self.nil or sibling.left is None:
+                        sibling_left_child_isBlue = True
+                    else:
+                        sibling_left_child_isBlue = sibling.left.isBlue
+                    if sibling.right == self.nil or sibling.right is None:
+                        sibling_right_child_isBlue = True
+                    else:
+                        sibling_right_child_isBlue = sibling.right.isBlue
+                    if sibling_left_child_isBlue and sibling_right_child_isBlue:
+                        sibling.isBlue = False
+                        node = node.parent
+                    elif not sibling_right_child_isBlue and sibling_left_child_isBlue:
+                        sibling.right.isBlue = True
+                        sibling.isBlue = False
+                        self._rotate_left(sibling)
+                    else:
+                        sibling.isBlue = node.parent.isBlue
+                        sibling.left.isBlue = True
+                        node.parent.isBlue = True
+                        self._rotate_right(node.parent)
+        node.isBlue = True
+        self.root.isBlue = True
         return self
     def _find(self,node,data):
         ptr = self.root
@@ -231,14 +288,23 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
                 ptr = ptr.left
         if ptr.score == data:
             return node
+    def _relocate(self,deleting,subtree):
+        if deleting.parent is None:
+            self.root = subtree
+        elif deleting == deleting.parent.left:
+            deleting.parent.left = subtree
+        else:
+            deleting.parent.right = subtree
+        subtree.parent = deleting.parent
+        return self
     def _in_order_successor(self,node):
         ptr = node
-        while ptr != self.nil:
+        while ptr.left != self.nil:
             ptr = ptr.left
         return ptr
     def _in_order_predessor(self,node):
         ptr = node
-        while ptr != self.nil:
+        while ptr.right != self.nil:
             ptr = ptr.right
         return ptr
 
@@ -411,7 +477,6 @@ def find_range(words,letter,position):
         to_hi = len(words)
         to_lo = to_hi-1
     while (from_hi - from_lo > 1 or to_hi - to_lo > 1):
-        #if from_lo != from_hi-1:
         if from_hi - from_lo > 1:
             ptr  = (from_lo + from_hi) >> 1
             ltr  = words[ptr][position]
@@ -419,7 +484,6 @@ def find_range(words,letter,position):
                 from_lo = ptr
             else:
                 from_hi = ptr
-        #if to_lo != to_hi-1:
         if to_hi - to_lo > 1:
             ptr1 = (to_lo + to_hi) >> 1
             ltr1 = words[ptr1][position]
@@ -671,7 +735,6 @@ def suggest_words(words,top=1):
             print(f"{word} : {score}")
             high_score = score
             best_word = word
-    #print(tree)
     return best_word
 
 def stats(letter_counts):
@@ -689,125 +752,3 @@ def stats(letter_counts):
     sigma_squared = squared_summation / num_of_chars_in_counts
     stdev = sigma_squared**(1/2)
     return mean,stdev
-
-def play(word):
-    word_dict = {}
-    for index,letter in enumerate(word):
-        if letter not in word_dict:
-            word_dict[letter] = [index]
-        else:
-            word_dict[letter].append(index)
-    guess = ""
-    while guess != CMD_EXIT:
-        guess = input(">> ")
-        guess = guess.strip()
-        components = guess.split(' ')
-        num_of_components = len(components)
-        if guess in CMD_EXIT:
-            return
-        guess_dict = {}
-        result = []
-        for index,letter in enumerate(guess):
-            temp = Wordle_Node(letter,NO_RESULT,index,None)
-            result.append(temp)
-            if letter not in guess_dict:
-                guess_dict[letter] = [index]
-            else:
-                guess_dict[letter].append(index)
-        #Start processing
-        for guess_key in guess_dict.keys():
-            if guess_key in word_dict:
-                #Pass 1
-                num_of_letter_correct = 0
-                for guess_key_val in guess_dict[guess_key]:
-                    if guess_key_val in word_dict[guess_key]:
-                        num_of_letter_correct += 1
-                        result[guess_key_val].val = YES_RESULT
-                #Pass 2
-                word_iters = len(word_dict[guess_key])-num_of_letter_correct
-                guess_iters = len(guess_dict[guess_key])-num_of_letter_correct
-                iters = min(word_iters,guess_iters)
-                current_index = 0
-                while iters !=0:
-                    guess_index = guess_dict[guess_key][current_index]
-                    index_result = result[guess_index].val
-                    if index_result is not YES_RESULT:
-                        result[guess_index].val = WRONG_RESULT
-                        iters -= 1
-                        current_index += 1
-        #Display result
-        response_str = ""
-        for current_letter in range(len(result)):
-            if result[current_letter].val is YES_RESULT:
-                response_str += f"\033[30;42m{result[current_letter].letter}\033[0m"
-            elif result[current_letter].val is WRONG_RESULT:
-                response_str += f"\033[37;44m{result[current_letter].letter}\033[0m"
-            else:
-                response_str += f"{result[current_letter].letter}"
-        print(f"{response_str}")
-'''
-Suggestions bug
-audio nnwwn
-dirty wynnn
-field nywny
-hiked nynyy
-swamp nnnnn
-viced nynyy
-jibed nynyy
-nixed yyyyy
-
-howls wnnyw
-aleye wwnnn
-Should suggest something with l,m,t and not allel
-
-scare nnnww
-aeros nywnn
-deity nynnn
-elven wnnyn
-emmew wnnyw
-Should suggest something with f,w,h,b and not rebbe
-'''
-#sample = ['brank','drank','frank','prank','trank']
-#sample = ['codas', 'dados', 'fados', 'hodad', 'hodja', 'modal', 'nodal', 'podal', 'radon', 'sados', 'sodas', 'today', 'vodka']
-#asd = suggest_words(sample)
-#print(f"{asd}")
-
-    #def _rotate_left(self,node):
-        #child = node.right
-        #if child == self.nil:
-            #return self
-        ## Give
-        #if self.root == node:
-            #self.root = child
-            #child.parent = None
-        #else:
-            #child.parent = node.parent
-            #node.parent.right = child
-        ## Flip
-        #node.parent = child
-        ## Transfer
-        #node.right = child.left
-        #child.left = node
-        #return self
-
-test_tree = Blue_Gold_Tree()
-node_050 = Rank_Node("None",50)
-node_025 = Rank_Node("None",25)
-node_075 = Rank_Node("None",75)
-node_013 = Rank_Node("None",13)
-node_038 = Rank_Node("None",38)
-node_063 = Rank_Node("None",63)
-node_088 = Rank_Node("None",88)
-node_007 = Rank_Node("None",7)
-node_019 = Rank_Node("None",19)
-node_032 = Rank_Node("None",32)
-node_044 = Rank_Node("None",44)
-node_057 = Rank_Node("None",57)
-node_069 = Rank_Node("None",69)
-node_082 = Rank_Node("None",82)
-node_094 = Rank_Node("None",94)
-test_tree += node_050
-test_tree += node_025
-test_tree += node_075
-test_tree += node_013
-test_tree += node_007

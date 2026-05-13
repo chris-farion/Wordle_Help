@@ -24,12 +24,7 @@ def test_add_node_to_empty_tree():
     root_node = Rank_Node("Root",0)
     test_tree += root_node
     assert test_tree.root == root_node
-
-def test_root_node_is_blue():
-    test_tree = Blue_Gold_Tree()
-    root_node = Rank_Node("Root",0)
-    test_tree += root_node
-    assert root_node.isBlue == True
+    assert test_tree.root.isBlue == True
 
 def test_add_greater_than_node():
     test_tree = Blue_Gold_Tree()
@@ -130,9 +125,9 @@ def test_left_rotation():
     node_003 = Rank_Node("None",3)
     node_002 = Rank_Node("None",2)
     node_001 = Rank_Node("None",1)
-    test_tree += node_001
-    test_tree += node_002
     test_tree += node_003
+    test_tree += node_002
+    test_tree += node_001
     assert test_tree.root == node_002
 
 def test_duplicate():
@@ -274,32 +269,6 @@ def test_delete_node_not_found():
     test_tree += node_075
     test_tree -= node_038
     assert test_tree.nodes == 3
-
-def test_delete_node_2_children():
-    test_tree = Blue_Gold_Tree()
-    node_050 = Rank_Node("None",50)
-    node_025 = Rank_Node("None",25)
-    node_075 = Rank_Node("None",75)
-    node_012 = Rank_Node("None",12)
-    node_038 = Rank_Node("None",38)
-    node_063 = Rank_Node("None",63)
-    node_088 = Rank_Node("None",88)
-    node_007 = Rank_Node("None",7)
-    node_019 = Rank_Node("None",19)
-    node_032 = Rank_Node("None",32)
-    node_044 = Rank_Node("None",44)
-    node_057 = Rank_Node("None",57)
-    node_069 = Rank_Node("None",69)
-    node_082 = Rank_Node("None",82)
-    node_094 = Rank_Node("None",94)
-    test_tree += node_050
-    test_tree += node_025
-    test_tree += node_075
-    test_tree += node_012
-    test_tree += node_038
-    test_tree -= node_025
-    assert test_tree.nodes == 4
-    assert test_tree.root.left == node_038
 
 def test_delete_case_01():
     test_tree = Blue_Gold_Tree()
@@ -484,6 +453,7 @@ def test_delete_case_06():
     test_tree += node_088
     test_tree += node_007
     test_tree -= node_007
+    assert test_tree.nodes == 7
     assert node_025.isBlue == False
     assert node_012.isBlue == True
     assert node_038.isBlue == True
@@ -636,3 +606,29 @@ def test_delete_case_10():
     assert test_tree.root.left == node_019
     assert node_019.right == node_025
     assert node_025.isBlue == True
+
+def test_delete_case_11():
+    test_tree = Blue_Gold_Tree()
+    node_050 = Rank_Node("None",50)
+    node_025 = Rank_Node("None",25)
+    node_075 = Rank_Node("None",75)
+    node_012 = Rank_Node("None",12)
+    node_038 = Rank_Node("None",38)
+    node_063 = Rank_Node("None",63)
+    node_088 = Rank_Node("None",88)
+    node_007 = Rank_Node("None",7)
+    node_019 = Rank_Node("None",19)
+    node_032 = Rank_Node("None",32)
+    node_044 = Rank_Node("None",44)
+    node_057 = Rank_Node("None",57)
+    node_069 = Rank_Node("None",69)
+    node_082 = Rank_Node("None",82)
+    node_094 = Rank_Node("None",94)
+    test_tree += node_050
+    test_tree += node_025
+    test_tree += node_075
+    test_tree += node_012
+    test_tree -= node_012
+    test_tree -= node_025
+    assert test_tree.nodes == 2
+    assert node_075.isBlue == False
