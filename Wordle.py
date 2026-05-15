@@ -74,9 +74,9 @@ class Rank_Node:
     def __str__(self):
         return super().__repr__()[-6:-1]
     def disp(self):
-        color = "Red  "
+        color = "Gold"
         if self.isBlue:
-            color = "Black"
+            color = "Blue"
         if self.parent is None:
             prnt = "None"
         else:
@@ -734,7 +734,6 @@ def suggest_words(words,top=12):
             scores[letter] = (letter_count[letter]-mean)/stdev
     #Start the Binary Tree
     print(f"Letter scores\n\n {scores}")
-    high_score = float("-inf")
     tree = Blue_Gold_Tree()
     for word in dictionary:
         score = 0
@@ -757,10 +756,66 @@ def suggest_words(words,top=12):
                 tree += Rank_Node(word,score)
     return tree
 
-def print_top_answers(tree,visited=0):
-    if tree.right.score != float("-inf"):
-        print_top_answers(tree.right)
+def print_top_answers(node):
+    if node.right.score != float("-inf"):
+        print_top_answers(node.right)
+    print(f"{node.word}\t{node.score}")
+    if node.left.score != float("-inf"):
+        print_top_answers(node.left)
 
-    print(f"{tree.word}\t{tree.score}")
-    if tree.left.score != float("-inf"):
-        print_top_answers(tree.left)
+
+def play(word):
+    word_dict = {}
+    for index,letter in enumerate(word):
+        if letter not in word_dict:
+            word_dict[letter] = [index]
+        else:
+            word_dict[letter].append(index)
+    guess = ""
+    while guess != CMD_EXIT:
+        guess = input(">> ")
+        guess = guess.strip()
+        components = guess.split(' ')
+        num_of_components = len(components)
+        if guess in CMD_EXIT:
+            return
+        guess_dict = {}
+        result = []
+        for index,letter in enumerate(guess):
+            temp = Wordle_Node(letter,NO_RESULT,index,None)
+            result.append(temp)
+            if letter not in guess_dict:
+                guess_dict[letter] = [index]
+            else:
+                guess_dict[letter].append(index)
+        #Start processing
+        for guess_key in guess_dict.keys():
+            if guess_key in word_dict:
+                #Pass 1
+                num_of_letter_correct = 0
+                for guess_key_val in guess_dict[guess_key]:
+                    if guess_key_val in word_dict[guess_key]:
+                        num_of_letter_correct += 1
+                        result[guess_key_val].val = YES_RESULT
+                #Pass 2
+                word_iters = len(word_dict[guess_key])-num_of_letter_correct
+                guess_iters = len(guess_dict[guess_key])-num_of_letter_correct
+                iters = min(word_iters,guess_iters)
+                current_index = 0
+                while iters !=0:
+                    guess_index = guess_dict[guess_key][current_index]
+                    index_result = result[guess_index].val
+                    if index_result is not YES_RESULT:
+                        result[guess_index].val = WRONG_RESULT
+                        iters -= 1
+                        current_index += 1
+        #Display result
+        response_str = ""
+        for current_letter in range(len(result)):
+            if result[current_letter].val is YES_RESULT:
+                response_str += f"\033[30;42m{result[current_letter].letter}\033[0m"
+            elif result[current_letter].val is WRONG_RESULT:
+                response_str += f"\033[37;44m{result[current_letter].letter}\033[0m"
+            else:
+                response_str += f"{result[current_letter].letter}"
+        print(f"{response_str}")
