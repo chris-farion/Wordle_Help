@@ -193,7 +193,7 @@ def test_delete_leaf_node():
     test_tree += node_075
     test_tree += node_012
     test_tree -= node_012
-    assert node_025.left.score == float("-inf")
+    assert node_025.left == test_tree.nil
     assert test_tree.nodes == 3
 
 def test_delete_node_1_child():
@@ -299,7 +299,7 @@ def test_delete_case_01():
     test_tree += node_094
     test_tree -= node_019
     assert test_tree.nodes == 9
-    assert node_012.right.score == float("-inf")
+    assert node_012.right == test_tree.nil
 
 def test_delete_case_02():
     test_tree = Blue_Gold_Tree()
@@ -362,7 +362,7 @@ def test_delete_case_03():
     test_tree -= node_075
     assert test_tree.nodes == 9
     assert test_tree.root.right == node_082
-    assert node_088.left.score == float("-inf")
+    assert node_088.left == test_tree.nil
 
 def test_delete_case_04():
     test_tree = Blue_Gold_Tree()
