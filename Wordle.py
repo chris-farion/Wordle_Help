@@ -302,7 +302,7 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         while ptr.left != self.nil:
             ptr = ptr.left
         return ptr
-    def _in_order_predessor(self,node):
+    def _in_order_predecessor(self,node):
         ptr = node
         while ptr.right != self.nil:
             ptr = ptr.right
