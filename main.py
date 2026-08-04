@@ -22,7 +22,10 @@ while cmd_line != CMD_EXIT:
             play(all_words[rando])
         elif cmd_line == CMD_SUGGEST:
             suggestions = suggest_words(w)
+            suggestions_from_current = suggest_words_from_current(w)
             print_top_answers(suggestions.root)
+            print("------------")
+            print_top_answers(suggestions_from_current.root)
         else:
             try:
                 schedule,duplicates = scheduler(cmd_line)

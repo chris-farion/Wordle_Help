@@ -13,19 +13,14 @@ WILDCARD_RESULT = '.'
 WRONG_RESULT = 'w'
 YES_RESULT = 'y'
 
-class Wordle_Guess:
-    def __init__(self, guess, result):
-        self.guess = guess
-        self.result = result
-    def matching_lengths(self):
-        return len(self.guess)==len(self.result)
-
 class Wordle_Node:
     def __init__(self, letter=WILDCARD_RESULT, value=WILDCARD_RESULT, position=0, next=None):
         self.letter = letter
         self.val = value
         self.pos = position
         self.next = next
+        self.count = 1
+        self.present = 0
     def has_next(self):
         next_exists = False
         if self.next is not None:
@@ -33,14 +28,6 @@ class Wordle_Node:
         return next_exists
     def __str__(self):
         return f"{self.letter}={self.val}@{self.pos}"
-    def disp(self):
-        print(f"{self.letter}={self.val}@{self.pos}")
-
-class Duplicate_Node:
-    def __init__(self, letter=WILDCARD_RESULT):
-        self.letter = letter
-        self.count = 1
-        self.present = 0
     def disp(self):
         sign = '>='
         if self.count != self.present:
@@ -307,7 +294,6 @@ class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
         while ptr.right != self.nil:
             ptr = ptr.right
         return ptr
-
 
 def load_5_letter_words():
     file_path = 'Total_Wordle_Word_Bank.txt'
@@ -588,15 +574,14 @@ def enter():
 
 def scheduler(components):
     wordle_keyword = components[0]
-    wordle_word = components[1][1:].lower()
-    wordle_result = components[2][1:].lower()
-    guess = Wordle_Guess(wordle_word, wordle_result)
-    if not guess.matching_lengths():
+    wordle_word = components[1].lower()
+    wordle_result = components[2].lower()
+    if not len(wordle_word) == len(wordle_result):
         return
-    schedule, duplicates = create_schedule_and_duplicates(guess)
+    schedule, duplicates = create_schedule_and_duplicates(wordle_word,wordle_result)
     return schedule, duplicates
 
-def create_schedule_and_duplicates(node):
+def create_schedule_and_duplicates(guess,result):
     yes_dummy = Wordle_Node()
     no_dummy = Wordle_Node()
     wrong_dummy = Wordle_Node()
@@ -604,29 +589,29 @@ def create_schedule_and_duplicates(node):
     nCurrent = no_dummy
     wCurrent = wrong_dummy
     duplicates = {}
-    for index,letter in enumerate(node.guess):
+    for index,letter in enumerate(guess):
         if letter not in duplicates:
-            duplicates[letter] = Duplicate_Node(letter)
-            if node.result[index] != NO_RESULT:
+            duplicates[letter] = Wordle_Node(letter)
+            if result[index] != NO_RESULT:
                 duplicates[letter].present += 1
         else:
             duplicates[letter].count = duplicates[letter].count + 1
-            if node.result[index] != NO_RESULT:
+            if result[index] != NO_RESULT:
                 duplicates[letter].present = duplicates[letter].present + 1
         #Start creating the schedule...
-        if node.result[index] == YES_RESULT:
+        if result[index] == YES_RESULT:
             yCurrent.next = Wordle_Node()
             yCurrent = yCurrent.next
             yCurrent.letter = letter
             yCurrent.val = YES_RESULT
             yCurrent.pos = index
-        elif node.result[index] == NO_RESULT:
+        elif result[index] == NO_RESULT:
             nCurrent.next = Wordle_Node()
             nCurrent = nCurrent.next
             nCurrent.letter = letter
             nCurrent.val = NO_RESULT
             nCurrent.pos = index
-        elif node.result[index] == WRONG_RESULT:
+        elif result[index] == WRONG_RESULT:
             wCurrent.next = Wordle_Node()
             wCurrent = wCurrent.next
             wCurrent.letter = letter
@@ -736,6 +721,58 @@ def suggest_words(words,top=12):
     print(f"Letter scores\n\n {scores}")
     tree = Blue_Gold_Tree()
     for word in dictionary:
+        score = 0
+        partial_dict = {}
+        for letter in word:
+            if letter in letter_count and letter not in partial_dict:
+                partial_dict[letter] = [letter]
+                score += scores[letter]
+            elif letter in letter_count and letter in partial_dict:
+                score += scores["0"]
+            else:
+                score += scores["0"]
+        if tree.nodes < top:
+            node = Rank_Node(word,score)
+            tree += node
+        else:
+            lowest_score = tree._in_order_successor(tree.root)
+            if score > lowest_score.score:
+                tree -= lowest_score
+                tree += Rank_Node(word,score)
+    return tree
+
+def suggest_words_from_current(words,top=12):
+    if len(words) <= 1:
+        return words
+    num_of_words = len(words)
+    dictionary = load_5_letter_words()
+    letter_count = {}
+    # Count number of letters in remaining words
+    for word in words:
+        for letter in word:
+            if letter in letter_count:
+                letter_count[letter] += 1
+            else:
+                letter_count[letter] = 1
+    # Delete letters that are already Yes or Wrong position
+    for letter in list(letter_count.keys()):
+        if letter_count[letter] >= num_of_words:
+            letter_count[letter] = letter_count[letter] % num_of_words 
+        if letter_count[letter] == 0:
+            del letter_count[letter]
+    mean,stdev = stats(letter_count)
+    if stdev == 0:
+        stdev = 1
+        scores = {"0":(-mean/stdev)}
+        for letter in letter_count:
+            scores[letter] = 1
+    else:
+        scores = {"0":(-mean/stdev)}
+        for letter in letter_count:
+            scores[letter] = (letter_count[letter]-mean)/stdev
+    #Start the Binary Tree
+    tree = Blue_Gold_Tree()
+    for word in words:
         score = 0
         partial_dict = {}
         for letter in word:
