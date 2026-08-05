@@ -707,12 +707,15 @@ def suggest_words(words,top=12):
         if letter_count[letter] == 0:
             del letter_count[letter]
     mean,stdev = stats(letter_count)
-    print(f"Mean: {mean:0.4f}\nStdev.P: {stdev:0.4f}")
+    print(f"Mean:    {mean:0.4f}\nStdev.P: {stdev:0.4f}")
     if stdev == 0:
         stdev = 1
         scores = {"0":(-mean/stdev)}
         for letter in letter_count:
             scores[letter] = 1
+        tree = Blue_Gold_Tree()
+        tree += Rank_Node()
+        return tree
     else:
         scores = {"0":round((-mean/stdev),4)}
         for letter in letter_count:
@@ -796,7 +799,8 @@ def suggest_words_from_current(words,top=12):
 def print_top_answers(node):
     if node.right.score != float("-inf"):
         print_top_answers(node.right)
-    print(f"{node.word}\t{node.score:0.4f}")
+    if node.score != float("-inf"):
+        print(f"{node.word}\t{node.score:0.4f}")
     if node.left.score != float("-inf"):
         print_top_answers(node.left)
 
