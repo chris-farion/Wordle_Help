@@ -707,16 +707,16 @@ def suggest_words(words,top=12):
         if letter_count[letter] == 0:
             del letter_count[letter]
     mean,stdev = stats(letter_count)
-    print(f"Mean: {mean}\nStdev.P: {stdev}")
+    print(f"Mean: {mean:0.4f}\nStdev.P: {stdev:0.4f}")
     if stdev == 0:
         stdev = 1
         scores = {"0":(-mean/stdev)}
         for letter in letter_count:
             scores[letter] = 1
     else:
-        scores = {"0":(-mean/stdev)}
+        scores = {"0":round((-mean/stdev),4)}
         for letter in letter_count:
-            scores[letter] = (letter_count[letter]-mean)/stdev
+            scores[letter] = round((letter_count[letter]-mean)/stdev,4)
     #Start the Binary Tree
     print(f"Letter scores\n\n {scores}")
     tree = Blue_Gold_Tree()
@@ -796,10 +796,9 @@ def suggest_words_from_current(words,top=12):
 def print_top_answers(node):
     if node.right.score != float("-inf"):
         print_top_answers(node.right)
-    print(f"{node.word}\t{node.score}")
+    print(f"{node.word}\t{node.score:0.4f}")
     if node.left.score != float("-inf"):
         print_top_answers(node.left)
-
 
 def play(word):
     word_dict = {}
