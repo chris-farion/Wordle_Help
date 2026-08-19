@@ -70,6 +70,13 @@ class Rank_Node:
             prnt = self.parent.score
         return f"{self.score}-{color}-{prnt}-{self.left.score}-{self.right.score}"
 
+class Available_Letters:
+    def __init__(self):
+        self.viable = ["abcdefghijklmnopqrstuvwxyz"] * 5
+    def _y(self,pos,letter):
+        self.viable[pos] = letter.lower()
+        return self
+
 class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
     def __init__(self):
         self.nil = Rank_Node()
@@ -687,7 +694,120 @@ def stats(letter_counts):
     stdev = sigma_squared**(1/2)
     return mean,stdev
 
-def suggest_words(words,top=12):
+def collect_data(words):
+    num_of_words = len(words)
+    letter_count = {}
+    # Count number of letters in remaining words
+    for word in words:
+        for letter in word:
+            if letter in letter_count:
+                letter_count[letter] += 1
+            else:
+                letter_count[letter] = 1
+    # Delete letters that are already Yes or Wrong position
+    for letter in list(letter_count.keys()):
+        if letter_count[letter] >= num_of_words:
+            letter_count[letter] = letter_count[letter] % num_of_words 
+        if letter_count[letter] == 0:
+            del letter_count[letter]
+    return letter_count
+
+def normalize(letter_count,mean,stdev):
+    if stdev == 0:
+        stdev = 1
+    scores = {"0":round((-mean/stdev),4)}
+    for letter in list(letter_count.keys()):
+        scores[letter] = round((letter_count[letter]-mean)/stdev,4)
+    return scores
+
+def formulate_tree(input,scores,top=12):
+    tree = Blue_Gold_Tree()
+    for word in input:
+        score = 0
+        partial_dict = {}
+        for letter in word:
+            if letter in scores and letter not in partial_dict:
+                partial_dict[letter] = [letter]
+                score += scores[letter]
+            elif letter in scores and letter in partial_dict:
+                score += scores["0"]
+            else:
+                score += scores["0"]
+        if tree.nodes < top:
+            tree += Rank_Node(word,score)
+        else:
+            lowest_score = tree._in_order_successor(tree.root)
+            if score > lowest_score.score:
+                tree -= lowest_score
+                tree += Rank_Node(word,score)
+    return tree
+
+def suggest_words(words,scores,top=12):
+    if len(words) <= 1:
+        return words
+    #Start the Binary Tree
+    dictionary = load_5_letter_words()
+    tree = Blue_Gold_Tree()
+    for word in dictionary:
+        score = 0
+        partial_dict = {}
+        for letter in word:
+            if letter in letter_count and letter not in partial_dict:
+                partial_dict[letter] = [letter]
+                score += scores[letter]
+            elif letter in letter_count and letter in partial_dict:
+                score += scores["0"]
+            else:
+                score += scores["0"]
+        if tree.nodes < top:
+            node = Rank_Node(word,score)
+            tree += node
+        else:
+            lowest_score = tree._in_order_successor(tree.root)
+            if score > lowest_score.score:
+                tree -= lowest_score
+                tree += Rank_Node(word,score)
+    return tree
+
+def suggest_words_from_current(words,top=12):
+    if len(words) <= 1:
+        return words
+    num_of_words = len(words)
+    letter_count = collect_data(words)
+    mean,stdev = stats(letter_count)
+    if stdev == 0:
+        stdev = 1
+        scores = {"0":(-mean/stdev)}
+        for letter in letter_count:
+            scores[letter] = 1
+    else:
+        scores = {"0":(-mean/stdev)}
+        for letter in letter_count:
+            scores[letter] = (letter_count[letter]-mean)/stdev
+    #Start the Binary Tree
+    tree = Blue_Gold_Tree()
+    for word in words:
+        score = 0
+        partial_dict = {}
+        for letter in word:
+            if letter in letter_count and letter not in partial_dict:
+                partial_dict[letter] = [letter]
+                score += scores[letter]
+            elif letter in letter_count and letter in partial_dict:
+                score += scores["0"]
+            else:
+                score += scores["0"]
+        if tree.nodes < top:
+            node = Rank_Node(word,score)
+            tree += node
+        else:
+            lowest_score = tree._in_order_successor(tree.root)
+            if score > lowest_score.score:
+                tree -= lowest_score
+                tree += Rank_Node(word,score)
+    return tree
+
+def suggest_words_original(words,top=12):
     if len(words) <= 1:
         return words
     num_of_words = len(words)
@@ -744,7 +864,7 @@ def suggest_words(words,top=12):
                 tree += Rank_Node(word,score)
     return tree
 
-def suggest_words_from_current(words,top=12):
+def suggest_words_from_current_original(words,top=12):
     if len(words) <= 1:
         return words
     num_of_words = len(words)
@@ -861,3 +981,10 @@ def result_string(answer,guess):
                     iters -= 1
                     current_index += 1
     return result
+
+#test = ["abcdefghijklmnopqrstuvwxyz"] * 5
+#print(test)
+test = Available_Letters()
+test._y(1,'B')
+print(test.viable[1])
+print(test.viable)
