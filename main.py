@@ -1,7 +1,9 @@
 from Wordle import *
 
 full_list_of_words = load_5_letter_words()
+all_letters = Available_Letters()
 w = full_list_of_words
+a = all_letters
 cmd_line = ""
 while cmd_line != CMD_EXIT:
     cmd_line = enter()
@@ -21,8 +23,13 @@ while cmd_line != CMD_EXIT:
             rando = random.randint(0,len(all_words))
             play(all_words[rando])
         elif cmd_line == CMD_SUGGEST:
-            suggestions = suggest_words(w)
-            suggestions_from_current = suggest_words_from_current(w)
+            letter_counts = collect_data(w)
+            mean,stdev = stats(letter_counts)
+            scores = normalize(letter_counts,mean,stdev)
+            print(f"Mean:    {mean:0.4f}\nStdev.P: {stdev:0.4f}")
+            print(f"{scores}")
+            suggestions = formulate_tree(full_list_of_words,scores)
+            suggestions_from_current = formulate_tree(w,scores)
             print_top_answers(suggestions.root)
             print("------------")
             print_top_answers(suggestions_from_current.root)
