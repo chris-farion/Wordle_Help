@@ -37,6 +37,7 @@ while cmd_line != CMD_EXIT:
             try:
                 schedule,duplicates = scheduler(cmd_line)
                 w = exe(w,schedule,duplicates)
+                a = exe_letters(a,schedule,duplicates)
             except TypeError as e:
                 print("Error code ->", e)
 

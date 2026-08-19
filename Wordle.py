@@ -73,8 +73,14 @@ class Rank_Node:
 class Available_Letters:
     def __init__(self):
         self.viable = ["abcdefghijklmnopqrstuvwxyz"] * 5
+        self.correct = 0
     def _y(self,pos,letter):
         self.viable[pos] = letter.lower()
+        self.correct += 1
+        return self
+    def _w(self,pos,letter):
+        self.viable[pos] = self.viable[pos].replace(letter,"")
+        self.correct += 1
         return self
 
 class Blue_Gold_Tree: # This is typically Red/Black pero soy hincha de Boca
@@ -627,6 +633,11 @@ def create_schedule_and_duplicates(guess,result):
         else:
             pass
     start_node = link_nodes_for_schedule(yes_dummy,no_dummy,wrong_dummy,yCurrent,nCurrent,wCurrent)
+    copy_over = start_node
+    while copy_over.has_next():
+        copy_over = copy_over.next
+        copy_over.present = duplicates[copy_over.letter].present
+        copy_over.count = duplicates[copy_over.letter].count
     return start_node, duplicates
 
 def link_nodes_for_schedule(yes_dummy,no_dummy,wrong_dummy,yCurrent,nCurrent,wCurrent):
@@ -634,26 +645,16 @@ def link_nodes_for_schedule(yes_dummy,no_dummy,wrong_dummy,yCurrent,nCurrent,wCu
     no_exists = no_dummy.has_next()
     wrong_exists = wrong_dummy.has_next()
     start_node = Wordle_Node()
+    queue = []
     if yes_exists:
-        if no_exists:
-            yCurrent.next = no_dummy.next
-            if wrong_exists:
-                nCurrent.next = wrong_dummy.next
-        elif wrong_exists:
-            yCurrent.next = wrong_dummy.next
-        else:
-            pass
-        start_node = yes_dummy
-    elif no_exists:
-        if wrong_exists:
-            nCurrent.next = wrong_dummy.next
-        else:
-            pass
-        start_node = no_dummy
-    elif wrong_exists:
-        start_node = wrong_dummy
-    else:
-        pass
+        queue.extend([yes_dummy,yCurrent])
+    if no_exists:
+        queue.extend([no_dummy,nCurrent])
+    if wrong_exists:
+        queue.extend([wrong_dummy,wCurrent])
+    start_node = queue[0]
+    for i in range(0,len(queue)-2,2):
+        queue[i+1].next = queue[i+2].next
     return start_node
 
 def exe(words,schedule,duplicates):
@@ -669,6 +670,25 @@ def exe(words,schedule,duplicates):
         else:
             pass
     return words
+
+def exe_letters(avail,schedule,duplicates):
+    positions = remaining_indices(schedule)
+    while schedule.has_next():
+        schedule = schedule.next
+        if schedule.val == YES_RESULT:
+            avail = avail._y(schedule.pos,schedule.letter)
+        elif schedule.val == NO_RESULT:
+            #num_in_answer = duplicates[schedule.letter].present
+            #if num_in_answer != 0:
+                #duplicate_with_wrong = wrong_exception(schedule)
+                #if duplicate_with_wrong:
+                    #remaining_positions = [schedule.pos]
+            avail = avail
+        elif schedule.val == WRONG_RESULT:
+            avail = avail._w(schedule.pos,schedule.letter)
+        else:
+            pass
+    return avail
 
 def remaining_indices(schedule):
     non_yes_indices = []
@@ -735,180 +755,6 @@ def formulate_tree(input,scores,top=12):
                 score += scores["0"]
         if tree.nodes < top:
             tree += Rank_Node(word,score)
-        else:
-            lowest_score = tree._in_order_successor(tree.root)
-            if score > lowest_score.score:
-                tree -= lowest_score
-                tree += Rank_Node(word,score)
-    return tree
-
-def suggest_words(words,scores,top=12):
-    if len(words) <= 1:
-        return words
-    #Start the Binary Tree
-    dictionary = load_5_letter_words()
-    tree = Blue_Gold_Tree()
-    for word in dictionary:
-        score = 0
-        partial_dict = {}
-        for letter in word:
-            if letter in letter_count and letter not in partial_dict:
-                partial_dict[letter] = [letter]
-                score += scores[letter]
-            elif letter in letter_count and letter in partial_dict:
-                score += scores["0"]
-            else:
-                score += scores["0"]
-        if tree.nodes < top:
-            node = Rank_Node(word,score)
-            tree += node
-        else:
-            lowest_score = tree._in_order_successor(tree.root)
-            if score > lowest_score.score:
-                tree -= lowest_score
-                tree += Rank_Node(word,score)
-    return tree
-
-def suggest_words_from_current(words,top=12):
-    if len(words) <= 1:
-        return words
-    num_of_words = len(words)
-    letter_count = collect_data(words)
-    mean,stdev = stats(letter_count)
-    if stdev == 0:
-        stdev = 1
-        scores = {"0":(-mean/stdev)}
-        for letter in letter_count:
-            scores[letter] = 1
-    else:
-        scores = {"0":(-mean/stdev)}
-        for letter in letter_count:
-            scores[letter] = (letter_count[letter]-mean)/stdev
-    #Start the Binary Tree
-    tree = Blue_Gold_Tree()
-    for word in words:
-        score = 0
-        partial_dict = {}
-        for letter in word:
-            if letter in letter_count and letter not in partial_dict:
-                partial_dict[letter] = [letter]
-                score += scores[letter]
-            elif letter in letter_count and letter in partial_dict:
-                score += scores["0"]
-            else:
-                score += scores["0"]
-        if tree.nodes < top:
-            node = Rank_Node(word,score)
-            tree += node
-        else:
-            lowest_score = tree._in_order_successor(tree.root)
-            if score > lowest_score.score:
-                tree -= lowest_score
-                tree += Rank_Node(word,score)
-    return tree
-
-def suggest_words_original(words,top=12):
-    if len(words) <= 1:
-        return words
-    num_of_words = len(words)
-    dictionary = load_5_letter_words()
-    letter_count = {}
-    # Count number of letters in remaining words
-    for word in words:
-        for letter in word:
-            if letter in letter_count:
-                letter_count[letter] += 1
-            else:
-                letter_count[letter] = 1
-    # Delete letters that are already Yes or Wrong position
-    for letter in list(letter_count.keys()):
-        if letter_count[letter] >= num_of_words:
-            letter_count[letter] = letter_count[letter] % num_of_words 
-        if letter_count[letter] == 0:
-            del letter_count[letter]
-    mean,stdev = stats(letter_count)
-    print(f"Mean:    {mean:0.4f}\nStdev.P: {stdev:0.4f}")
-    if stdev == 0:
-        stdev = 1
-        scores = {"0":(-mean/stdev)}
-        for letter in letter_count:
-            scores[letter] = 1
-        tree = Blue_Gold_Tree()
-        tree += Rank_Node()
-        return tree
-    else:
-        scores = {"0":round((-mean/stdev),4)}
-        for letter in letter_count:
-            scores[letter] = round((letter_count[letter]-mean)/stdev,4)
-    #Start the Binary Tree
-    print(f"Letter scores\n\n {scores}")
-    tree = Blue_Gold_Tree()
-    for word in dictionary:
-        score = 0
-        partial_dict = {}
-        for letter in word:
-            if letter in letter_count and letter not in partial_dict:
-                partial_dict[letter] = [letter]
-                score += scores[letter]
-            elif letter in letter_count and letter in partial_dict:
-                score += scores["0"]
-            else:
-                score += scores["0"]
-        if tree.nodes < top:
-            node = Rank_Node(word,score)
-            tree += node
-        else:
-            lowest_score = tree._in_order_successor(tree.root)
-            if score > lowest_score.score:
-                tree -= lowest_score
-                tree += Rank_Node(word,score)
-    return tree
-
-def suggest_words_from_current_original(words,top=12):
-    if len(words) <= 1:
-        return words
-    num_of_words = len(words)
-    dictionary = load_5_letter_words()
-    letter_count = {}
-    # Count number of letters in remaining words
-    for word in words:
-        for letter in word:
-            if letter in letter_count:
-                letter_count[letter] += 1
-            else:
-                letter_count[letter] = 1
-    # Delete letters that are already Yes or Wrong position
-    for letter in list(letter_count.keys()):
-        if letter_count[letter] >= num_of_words:
-            letter_count[letter] = letter_count[letter] % num_of_words 
-        if letter_count[letter] == 0:
-            del letter_count[letter]
-    mean,stdev = stats(letter_count)
-    if stdev == 0:
-        stdev = 1
-        scores = {"0":(-mean/stdev)}
-        for letter in letter_count:
-            scores[letter] = 1
-    else:
-        scores = {"0":(-mean/stdev)}
-        for letter in letter_count:
-            scores[letter] = (letter_count[letter]-mean)/stdev
-    #Start the Binary Tree
-    tree = Blue_Gold_Tree()
-    for word in words:
-        score = 0
-        partial_dict = {}
-        for letter in word:
-            if letter in letter_count and letter not in partial_dict:
-                partial_dict[letter] = [letter]
-                score += scores[letter]
-            elif letter in letter_count and letter in partial_dict:
-                score += scores["0"]
-            else:
-                score += scores["0"]
-        if tree.nodes < top:
-            node = Rank_Node(word,score)
-            tree += node
         else:
             lowest_score = tree._in_order_successor(tree.root)
             if score > lowest_score.score:
@@ -984,7 +830,7 @@ def result_string(answer,guess):
 
 #test = ["abcdefghijklmnopqrstuvwxyz"] * 5
 #print(test)
-test = Available_Letters()
-test._y(1,'B')
-print(test.viable[1])
-print(test.viable)
+#test = Available_Letters()
+#test._y(1,'B')
+#print(test.viable[1])
+#print(test.viable)
