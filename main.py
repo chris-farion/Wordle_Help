@@ -1,47 +1,33 @@
-from Wordle import *
+from initialize import *
 
-full_list_of_words = load_5_letter_words()
-all_letters = Available_Letters()
-w = full_list_of_words
-a = all_letters
+wrd = Wordle()
 cmd_line = ""
 while cmd_line != CMD_EXIT:
     cmd_line = enter()
     if cmd_line != CMD_EXIT:
         if cmd_line == CMD_RESET:
-            w = full_list_of_words
+            wrd.reset()
         elif cmd_line == CMD_STATUS:
-            w = merge_sort(w)
-            print(w)
+            wrd.status()
         elif cmd_line is None:
             pass
         elif cmd_line == CMD_RANDOM:
-            rando = random.randint(0,len(w)-1)
-            print(f"Random word: {w[rando]}")
+            wrd.random()
         elif cmd_line == CMD_PLAY:
-            all_words = full_list_of_words
+            all_words = wrd.all_words
             rando = random.randint(0,len(all_words))
             play(all_words[rando])
         elif cmd_line == CMD_SUGGEST:
-            letter_counts = collect_data(w)
-            mean,stdev = stats(letter_counts)
-            scores = normalize(letter_counts,mean,stdev)
-            print(f"Mean:    {mean:0.4f}\nStdev.P: {stdev:0.4f}")
-            print(f"{scores}")
-            suggestions = formulate_tree(full_list_of_words,scores)
-            suggestions_from_current = formulate_tree(w,scores)
-            print_top_answers(suggestions.root)
-            print("------------")
-            print_top_answers(suggestions_from_current.root)
+            wrd.suggest()
         else:
             try:
                 schedule,duplicates = scheduler(cmd_line)
-                w = exe(w,schedule,duplicates)
-                a = exe_letters(a,schedule,duplicates)
+                wrd.active_words = exe(wrd.active_words,schedule,duplicates)
+                #a = exe_letters(a,schedule,duplicates)
             except TypeError as e:
                 print("Error code ->", e)
 
-#https://wordlearchive.com/363
+#https://wordlearchive.com/373
 #Suggest error below
 #vakil nnnwn
 #rents wwwwn

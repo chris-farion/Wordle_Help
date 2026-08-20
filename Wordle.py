@@ -13,6 +13,8 @@ WILDCARD_RESULT = '.'
 WRONG_RESULT = 'w'
 YES_RESULT = 'y'
 
+WORDLE_LENGTH = 5
+
 class Wordle_Node:
     def __init__(self, letter=WILDCARD_RESULT, value=WILDCARD_RESULT, position=0, next=None):
         self.letter = letter
@@ -72,7 +74,7 @@ class Rank_Node:
 
 class Available_Letters:
     def __init__(self):
-        self.viable = ["abcdefghijklmnopqrstuvwxyz"] * 5
+        self.viable = ["abcdefghijklmnopqrstuvwxyz"] * WORDLE_LENGTH
         self.correct = 0
     def _y(self,pos,letter):
         self.viable[pos] = letter.lower()
