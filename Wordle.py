@@ -823,38 +823,38 @@ def play(word):
                 response_str += f"{result[current_letter].letter}"
         print(f"{response_str}")
 
-def result_string(word,guess):
-    word_dict = {}
-    for index,letter in enumerate(word):
-        if letter not in word_dict:
-            word_dict[letter] = [index]
+def result_string(answer,guess):
+    answer_dictionary = {}
+    for index,letter in enumerate(answer):
+        if letter not in answer_dictionary:
+            answer_dictionary[letter] = [index]
         else:
-            word_dict[letter].append(index)
-    guess_dict = {}
+            answer_dictionary[letter].append(index)
+    guess_dictionary = {}
     result = []
     for index,letter in enumerate(guess):
         temp = Wordle_Node(letter,NO_RESULT,index,None)
         result.append(temp)
-        if letter not in guess_dict:
-            guess_dict[letter] = [index]
+        if letter not in guess_dictionary:
+            guess_dictionary[letter] = [index]
         else:
-            guess_dict[letter].append(index)
+            guess_dictionary[letter].append(index)
     #Start processing
-    for guess_key in guess_dict.keys():
-        if guess_key in word_dict:
+    for guess_letter in guess_dictionary.keys():
+        if guess_letter in answer_dictionary:
             #Pass 1
             num_of_letter_correct = 0
-            for guess_key_val in guess_dict[guess_key]:
-                if guess_key_val in word_dict[guess_key]:
+            for guess_letter_index in guess_dictionary[guess_letter]:
+                if guess_letter_index in answer_dictionary[guess_letter]:
                     num_of_letter_correct += 1
-                    result[guess_key_val].val = YES_RESULT
+                    result[guess_letter_index].val = YES_RESULT
             #Pass 2
-            word_iters = len(word_dict[guess_key])-num_of_letter_correct
-            guess_iters = len(guess_dict[guess_key])-num_of_letter_correct
-            iters = min(word_iters,guess_iters)
+            answer_iters = len(answer_dictionary[guess_letter])-num_of_letter_correct
+            guess_iters = len(guess_dictionary[guess_letter])-num_of_letter_correct
+            iters = min(answer_iters,guess_iters)
             current_index = 0
             while iters !=0:
-                guess_index = guess_dict[guess_key][current_index]
+                guess_index = guess_dictionary[guess_letter][current_index]
                 index_result = result[guess_index].val
                 if index_result is not YES_RESULT:
                     result[guess_index].val = WRONG_RESULT
