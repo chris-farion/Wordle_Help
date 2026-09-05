@@ -15,6 +15,15 @@ YES_RESULT = 'y'
 
 WORDLE_LENGTH = 5
 
+class Command:
+    def __init__(self,keywords,input,output,options,description,function=0):
+        self.keywords = keywords
+        self.input = input
+        self.output = output
+        self.options = options
+        self.description = description
+        self.function = function
+
 class Wordle_Node:
     def __init__(self, letter=WILDCARD_RESULT, value=WILDCARD_RESULT, position=0, next=None):
         self.letter = letter
@@ -503,7 +512,7 @@ def find_range(words,letter,position):
 def yes(word_bank, schedule, duplicate_dict):
     letter = schedule.letter
     position = schedule.pos
-    word_bank = merge_sort_position(word_bank,position) 
+    word_bank = merge_sort_position(word_bank,position)
     first,last = find_range(word_bank, letter, position)
     word_bank = include_range(word_bank,first,last)
     print(f"{letter.upper()} - [{first}:{last}) @ {position+1}")
@@ -554,43 +563,9 @@ def wrong(word_bank, schedule, duplicate_dict):
         word_bank = temp
     return word_bank
 
-def enter():
-    cmd = input(">> ")
-    cmd = cmd.strip()
-    components = cmd.split(' ')
-    num_of_components = len(components)
-    if num_of_components == 1:
-        if components[0] in CMD_EXIT:
-            return CMD_EXIT
-        else:
-            return
-    if num_of_components == 2:
-        if components[0] != KEYWORD:
-            return "Command not recognized. Please use 'wrd'."
-        if components[1] in "help":
-            #Create help menu
-            pass
-        elif components[1] in CMD_RESET:
-            return CMD_RESET
-        elif components[1] in CMD_SUGGEST:
-            return CMD_SUGGEST
-        elif components[1] in CMD_STATUS:
-            return CMD_STATUS
-        elif components[1] in CMD_RANDOM:
-            return CMD_RANDOM
-        elif components[1] in CMD_PLAY:
-            return CMD_PLAY
-        else:
-            return
-    elif num_of_components == 3:
-        return components
-    else:
-        return
-
-def scheduler(components):
-    wordle_keyword = components[0]
-    wordle_word = components[1].lower()
-    wordle_result = components[2].lower()
+def scheduler(*components):
+    wordle_word = components[0].lower()
+    wordle_result = components[1].lower()
     if not len(wordle_word) == len(wordle_result):
         return
     schedule, duplicates = create_schedule_and_duplicates(wordle_word,wordle_result)
@@ -729,7 +704,7 @@ def collect_data(words):
     # Delete letters that are already Yes or Wrong position
     for letter in list(letter_count.keys()):
         if letter_count[letter] >= num_of_words:
-            letter_count[letter] = letter_count[letter] % num_of_words 
+            letter_count[letter] = letter_count[letter] % num_of_words
         if letter_count[letter] == 0:
             del letter_count[letter]
     return letter_count
@@ -742,7 +717,20 @@ def normalize(letter_count,mean,stdev):
         scores[letter] = round((letter_count[letter]-mean)/stdev,4)
     return scores
 
-def formulate_tree(input,scores,top=12):
+def formulate_tree(input,scores,top):
+    tree = Blue_Gold_Tree()
+    for word in input:
+        score = get_score(word,scores)
+        if tree.nodes < top:
+            tree += Rank_Node(word,score)
+        else:
+            lowest_score = tree._in_order_successor(tree.root)
+            if score > lowest_score.score:
+                tree -= lowest_score
+                tree += Rank_Node(word,score)
+    return tree
+
+def formulate_tree_original(input,scores,top):
     tree = Blue_Gold_Tree()
     for word in input:
         score = 0
@@ -764,6 +752,19 @@ def formulate_tree(input,scores,top=12):
                 tree += Rank_Node(word,score)
     return tree
 
+def get_score(word,scores):
+    score = 0
+    partial_dict = {}
+    for letter in word:
+        if letter in scores and letter not in partial_dict:
+            partial_dict[letter] = [letter]
+            score += scores[letter]
+        elif letter in scores and letter in partial_dict:
+            score += scores["0"]
+        else:
+            score += scores["0"]
+    return score
+
 def print_top_answers(node):
     if node.right.score != float("-inf"):
         print_top_answers(node.right)
@@ -772,7 +773,7 @@ def print_top_answers(node):
     if node.left.score != float("-inf"):
         print_top_answers(node.left)
 
-def play(word):
+def play_original(word):
     guess = ""
     while guess != CMD_EXIT:
         guess = input(">> ")

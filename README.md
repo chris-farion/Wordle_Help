@@ -1,8 +1,6 @@
 ## Wordle_Help
 
 ### Commands
- Outside of exiting, start each command with  
- > **wrd**
 
  You are given one word bank to work from. Each guess you enter eliminates options from this bank to reveal the available answers.
 
@@ -13,29 +11,29 @@
    * w = Exists in the word but in the wrong position
 
   Example:
-  > wrd agony ywyyn
+  > agony ywyyn
 
  * Status  
   Use **sts** or **status** to see the words available in your word bank
-  > wrd sts _or_ wrd status
+  > sts _or_ status
 
  * Reset  
   Use **reset** to go back to a full word bank
-  > wrd reset
+  > reset
 
  * Random word  
   Use **rand** to select a random word out of the available words left in the word bank
-   > wrd rand
+   > rand
 
   * Suggest  
   When left with only one or two unknown letters, this will search the available letters in a full dictionary to cover these.
   > (e.g. 'champ', 'clamp', 'cramp', 'stamp', 'swamp', 'tramp', etc.)
   Use the following command
-  > wrd ?
+  > ?
 
   * Play  
   Use **play** to play Wordle on a random 5 letter word. To exit play mode, use **exit** or **we**.
- > wrd play
+ > play
 
   * Exit  
   Enter **exit** or **we** to exit the script
